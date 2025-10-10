@@ -1,0 +1,3692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nepali Calendar 2082 B.S.</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    .day-cell {
+      height: 120px;
+      width: 14.28%;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .table td {
+      width: 14.28%;
+      height: 120px;
+      vertical-align: top;
+    }
+    
+    .day-cell:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .saturday {
+      background-color: #ffe6e6 !important;
+      color: #dc3545 !important;
+    }
+    
+    .saturday:hover {
+      background-color: #ffcccc !important;
+    }
+    
+    .holiday-cell {
+      background-color: #ffe6e6 !important;
+      color: #dc3545 !important;
+    }
+    
+    .holiday-cell:hover {
+      background-color: #ffcccc !important;
+    }
+    
+    .today-highlight {
+      background-color: #0d6efd !important;
+      color: white !important;
+      font-weight: bold;
+    }
+    
+    .today-highlight small {
+      color: rgba(255,255,255,0.9) !important;
+    }
+    
+    .holiday-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 8px;
+      height: 8px;
+      background: #dc3545;
+      border-radius: 50%;
+    }
+    
+    .event-list {
+      margin-top: 5px;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+    
+    .event-item {
+      font-size: 10px;
+      padding: 1px 3px;
+      margin: 1px 0;
+      line-height: 1.2;
+      cursor: pointer;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+    }
+    
+    #popupOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+    }
+    
+    #holidayPopup {
+      position: fixed;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1001;
+      display: none;
+      max-width: 400px;
+      max-height: 500px;
+      overflow: hidden;
+    }
+    
+    .popup-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      padding: 15px 20px;
+      position: relative;
+    }
+    
+    .popup-content {
+      padding: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .holiday-item {
+      margin-bottom: 15px;
+      padding: 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+    
+    .holiday-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .holiday-type {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    .national-type {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .religious-type {
+      background-color: #6f42c1;
+      color: white;
+    }
+    
+    .cultural-type {
+      background-color: #0dcaf0;
+      color: white;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c757d;
+    }
+    
+    .close-btn:hover {
+      color: #000;
+      background-color: #e9ecef;
+      border-radius: 4px;
+    }
+    
+    @media print {
+      .btn, #popupOverlay, #holidayPopup { display: none !important; }
+    }
+    
+    .nav-link {
+      transition: all 0.3s ease;
+      border-radius: 8px;
+      margin: 0 5px;
+      padding: 8px 16px !important;
+    }
+    
+    .nav-link:hover {
+      background-color: #e3f2fd;
+      color: #1976d2 !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .nav-link.active {
+      background-color: #1976d2;
+      color: white !important;
+    }
+    
+    .nav-link.active:hover {
+      background-color: #1565c0;
+      color: white !important;
+    }
+    
+    .holiday-panel {
+      max-height: 500px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 15px;
+      scroll-behavior: smooth;
+      cursor: grab;
+    }
+    
+    .holiday-panel:active {
+      cursor: grabbing;
+    }
+    
+    .holiday-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .holiday-panel::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .holiday-panel::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    
+    .holiday-panel::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    .holiday-panel::-webkit-scrollbar-thumb:active {
+      background: #888;
+    }
+    
+    .panel-holiday-item {
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      background-color: #fff;
+      border-left: 3px solid #6c757d;
+    }
+    
+    .panel-holiday-item.national {
+      border-left-color: #dc3545;
+    }
+    
+    .panel-holiday-item.religious {
+      border-left-color: #6f42c1;
+    }
+    
+    .panel-holiday-item.cultural {
+      border-left-color: #0dcaf0;
+    }
+    
+    .panel-holiday-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .holiday-date {
+      font-size: 12px;
+      color: #6c757d;
+      margin-bottom: 4px;
+    }
+    
+    .holiday-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    
+    .holiday-desc {
+      font-size: 12px;
+      color: #6c757d;
+      line-height: 1.3;
+    }
+    
+    #allHolidaysModal .modal-body {
+      max-height: 70vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      cursor: grab;
+    }
+    
+    #allHolidaysModal .modal-body:active {
+      cursor: grabbing;
+    }
+    
+    #allHolidaysModal .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #allHolidaysModal .modal-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    #allHolidaysModal .modal-body::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    
+    #allHolidaysModal .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    #allHolidaysModal .modal-body::-webkit-scrollbar-thumb:active {
+      background: #888;
+    }
+    
+    .year-holidays {
+      margin-bottom: 25px;
+    }
+    
+    .month-section {
+      margin-bottom: 20px;
+    }
+    
+    .month-title {
+      font-weight: bold;
+      color: #495057;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    
+    .news-item {
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: white;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    
+    .news-content {
+      padding: 0;
+    }
+    
+    .news-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .news-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    
+    .news-summary {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .news-source {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    
+    .news-date {
+      color: #666;
+    }
+    
+    .see-more-btn {
+      background: none;
+      border: none;
+      color: #1976d2;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    
+    .see-more-btn:hover {
+      color: #1565c0;
+    }
+    
+    .news-detail-content {
+      line-height: 1.6;
+      color: #333;
+    }
+    
+    .news-detail-content h1, .news-detail-content h2, .news-detail-content h3 {
+      color: #333;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .news-detail-content p {
+      margin-bottom: 15px;
+    }
+    
+    .news-detail-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .news-category-btn {
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .news-category-btn:hover {
+      background-color: #e3f2fd;
+      border-color: #1976d2;
+      color: #1976d2;
+      transform: translateY(-1px);
+    }
+    
+    .news-category-btn.active {
+      background-color: #1976d2;
+      border-color: #1976d2;
+      color: white;
+    }
+    
+    .news-category-btn.active:hover {
+      background-color: #1565c0;
+      border-color: #1565c0;
+      color: white;
+    }
+    
+    .featured-story-card {
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      background: white;
+      height: 100%;
+      overflow: hidden;
+      padding: 0;
+    }
+    
+    .featured-story-content {
+      padding: 12px;
+    }
+    
+    .featured-story-image {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+    
+    .featured-story-image-placeholder {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+    
+    .featured-story-card:hover {
+      background-color: #f8f9fa;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .featured-story-card:last-child {
+      border-bottom: none;
+    }
+    
+    .featured-story-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .featured-story-summary {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .featured-story-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+    }
+    
+    .featured-story-source {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+    
+    .featured-story-date {
+      color: #888;
+    }
+    
+    .story-match-indicator {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #28a745;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    
+    .featured-stories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .featured-stories-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .featured-stories-grid::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    .featured-stories-grid::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    .featured-stories-grid::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* Compact Google Stories Style Cards */
+    .google-story-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      width: 180px;
+      height: 220px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .google-story-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .google-story-image-container {
+      position: relative;
+      height: 100px;
+      overflow: hidden;
+    }
+    
+    .google-story-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    .google-story-card:hover .google-story-image {
+      transform: scale(1.05);
+    }
+    
+    .google-story-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+    
+    .google-story-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      padding: 8px 6px 4px;
+    }
+    
+    .google-story-source {
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .google-story-content {
+      padding: 8px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .google-story-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .google-story-summary {
+      font-size: 10px;
+      color: #666;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      flex-grow: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .google-story-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+    
+    .google-story-date {
+      font-size: 9px;
+      color: #888;
+      font-weight: 500;
+    }
+    
+    .google-story-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 1px 4px;
+      border-radius: 6px;
+      font-size: 8px;
+      font-weight: 600;
+    }
+    
+    /* Horizontal scrolling container */
+    .stories-scroll-container {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 16px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .stories-scroll-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .stories-scroll-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    .stories-scroll-container::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    .stories-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* Responsive adjustments for Google Stories */
+    @media (max-width: 768px) {
+      .google-story-card {
+        width: 160px;
+        height: 200px;
+      }
+      
+      .google-story-image-container {
+        height: 90px;
+      }
+      
+      .google-story-title {
+        font-size: 11px;
+      }
+      
+      .google-story-summary {
+        font-size: 9px;
+      }
+      
+      .stories-scroll-container {
+        gap: 8px;
+        padding: 12px;
+      }
+    }
+    
+    .error-message {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .no-news {
+      text-align: center;
+      color: #666;
+      padding: 40px 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .scrollable-content {
+      max-height: 80vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      cursor: grab;
+      padding-right: 5px;
+    }
+    
+    .scrollable-content:active {
+      cursor: grabbing;
+    }
+    
+    .scrollable-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:active {
+      background: #888;
+    }
+    
+    /* Enhanced scrollbar for better visibility */
+    .scrollable-content:hover::-webkit-scrollbar-thumb {
+      background: #999;
+    }
+    
+    @media (max-width: 768px) {
+      .day-cell { height: 80px; font-size: 12px; }
+      .event-item { font-size: 9px; }
+      #holidayPopup { max-width: 280px; }
+      .holiday-panel { max-height: 300px; padding: 10px; }
+      .news-item { padding: 12px; }
+      .news-title { font-size: 15px; }
+      .news-summary { font-size: 13px; }
+      .scrollable-content { max-height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+  <div id="popupOverlay"></div>
+  <div id="holidayPopup">
+    <div class="popup-header">
+      <h6 id="holidayTitle" class="mb-0"></h6>
+      <button id="closePopup" class="close-btn">&times;</button>
+    </div>
+    <div class="popup-content" id="holidayContent"></div>
+  </div>
+
+  <!-- Header with Brand and Live Date & Time -->
+  <div class="bg-light shadow-sm mb-3">
+    <div class="container py-3">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <a class="navbar-brand fw-bold text-primary mb-2 mb-lg-0" href="#home" style="font-size: 1.5rem;">
+          नेपाली पात्रो २०८२
+        </a>
+        
+        <!-- Live Date & Time Display -->
+        <div class="d-flex flex-column align-items-center">
+          <div class="d-flex align-items-center gap-3">
+            <div class="text-center">
+              <div id="currentDate" class="fw-bold text-dark" style="font-size: 14px; line-height: 1.2;">
+                <!-- Current date will be displayed here -->
+              </div>
+              <div id="currentTime" class="text-primary fw-bold" style="font-size: 16px; font-family: 'Courier New', monospace;">
+                <!-- Current time will be displayed here -->
+              </div>
+            </div>
+            <div class="vr d-none d-md-block" style="height: 40px;"></div>
+            <div class="text-center d-none d-md-block">
+              <div class="d-flex gap-2">
+                <div class="text-center">
+                  <div class="text-muted small">🌅 Sunrise</div>
+                  <div id="sunriseTime" class="fw-bold text-warning" style="font-size: 12px;">
+                    <!-- Sunrise time will be displayed here -->
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="text-muted small">🌇 Sunset</div>
+                  <div id="sunsetTime" class="fw-bold text-danger" style="font-size: 12px;">
+                    <!-- Sunset time will be displayed here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item">
+            <a class="nav-link active fw-semibold" href="#home" data-section="home">
+              Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#news" data-section="news">
+              News
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#converter" data-section="converter">
+              Converter
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#exchange" data-section="exchange">
+              Exchange Rate
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#horoscope" data-section="horoscope">
+              राशीफल
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-fluid px-4">
+    <div id="homeSection" class="content-section">
+      <div class="row">
+        <div class="col-lg-8">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <button id="prevMonth" class="btn btn-outline-primary">&laquo; Previous</button>
+      <div class="d-flex align-items-center gap-2">
+        <select id="monthSelect" class="form-select form-select-sm" style="width: auto;">
+          <option value="0">बैशाख (Baisakh)</option>
+          <option value="1">जेठ (Jestha)</option>
+          <option value="2">आषाढ (Ashadh)</option>
+          <option value="3">श्रावण (Shrawan)</option>
+          <option value="4">भदौ (Bhadra)</option>
+          <option value="5">असोज (Asoj)</option>
+          <option value="6">कार्तिक (Kartik)</option>
+          <option value="7">मंसिर (Mangsir)</option>
+          <option value="8">पुष (Poush)</option>
+          <option value="9">माघ (Magh)</option>
+          <option value="10">फाल्गुन (Falgun)</option>
+          <option value="11">चैत्र (Chaitra)</option>
+        </select>
+        <select id="yearSelect" class="form-select form-select-sm" style="width: auto;">
+          <option value="2082">२०८२</option>
+        </select>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-outline-primary btn-sm active" id="bsToggle">BS</button>
+          <button type="button" class="btn btn-outline-primary btn-sm" id="adToggle">AD</button>
+        </div>
+      </div>
+      <button id="nextMonth" class="btn btn-outline-primary">Next &raquo;</button>
+    </div>
+
+    <div class="mb-3 text-center">
+      <h5 class="fw-bold text-primary" id="currentMonthDisplay">
+        बैशाख २०८२ - Baisakh 2082
+      </h5>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered text-center">
+        <thead class="table-light">
+          <tr id="weekdayHeader"></tr>
+        </thead>
+        <tbody id="calendarBody"></tbody>
+      </table>
+    </div>
+
+      <div class="text-center mt-3">
+        <button id="todayBtn" class="btn btn-primary btn-sm me-2">Today</button>
+        <button id="exportJson" class="btn btn-secondary btn-sm me-2">Export JSON</button>
+        <button id="printBtn" class="btn btn-secondary btn-sm me-2">Print</button>
+      </div>
+        </div>
+        
+        <!-- Right Panel for Holidays -->
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Holidays & Events</h6>
+              <button id="seeAllHolidays" class="btn btn-outline-primary btn-sm">See All</button>
+            </div>
+            <div class="card-body p-0">
+              <div id="monthlyHolidays" class="holiday-panel">
+                <!-- Monthly holidays will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Section -->
+    <div id="newsSection" class="content-section" style="display: none;">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">Latest News</h2>
+        <p class="text-muted">Stay updated with the latest news from Nepal</p>
+      </div>
+      
+      <!-- Featured Stories Section -->
+      <div class="mb-4">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">लोकप्रिय</h5>
+            <small>Latest breaking news and top stories from Nepal</small>
+          </div>
+          <div class="card-body p-0">
+            <div id="featuredStoriesContainer" class="row g-0">
+              <!-- Featured stories will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main News Layout with Left Sidebar -->
+      <div class="row">
+        <!-- Left Sidebar for Menu and Controls -->
+        <div class="col-lg-3 col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-header">
+              <h6 class="mb-0">News Categories</h6>
+            </div>
+            <div class="card-body">
+              <!-- News Category Menu -->
+              <div class="mb-4">
+                <div class="d-grid gap-2">
+                  <button class="btn btn-outline-primary news-category-btn active" data-category="all">
+                    ताजा समाचार
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="popular">
+                    लोकप्रिय
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="country">
+                    देश
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="economy">
+                    अर्थ
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="world">
+                    विश्व
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="sports">
+                    खेलकुद
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="technology">
+                    प्रविधि
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="health">
+                    स्वास्थ्य
+                  </button>
+                  <button class="btn btn-outline-primary news-category-btn" data-category="entertainment">
+                    मनोरञ्जन
+                  </button>
+                </div>
+              </div>
+
+              <!-- News Source Selector -->
+              <div class="mb-3">
+                <label class="form-label small fw-bold">News Source:</label>
+                <select id="newsSourceSelect" class="form-select form-select-sm">
+                  <option value="all">All News Sources</option>
+                  <option value="nepalpostdaily">Nepal Post Daily</option>
+                  <option value="onlinekhabar">Online Khabar</option>
+                  <option value="nagarik">Nagarik News</option>
+                  <option value="kantipur">Kantipur (eKantipur)</option>
+                  <option value="setopati">Setopati</option>
+                  <option value="ratopati">Ratopati</option>
+                  <option value="rajdhani">Rajdhani Daily</option>
+                  <option value="newsofnepal">News of Nepal</option>
+                  <option value="osnepal">OSNepal</option>
+                  <option value="abhiyan">Arthik Abhiyan</option>
+                  <option value="nepalitimes">Nepali Times (English)</option>
+                  <option value="kathmandutribune">Kathmandu Tribune</option>
+                  <option value="lokaantar">Lokaantar</option>
+                  <option value="telegraph">Telegraph Nepal</option>
+                  <option value="himalayan">The Himalayan Times</option>
+                </select>
+              </div>
+
+              <!-- Refresh Button -->
+              <div class="d-grid">
+                <button id="refreshNews" class="btn btn-primary btn-sm">
+                  <span id="refreshIcon">↻</span> Refresh News
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="col-lg-9 col-md-8">
+          <!-- Loading Indicator -->
+          <div id="newsLoading" class="text-center py-4" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading latest news...</p>
+          </div>
+
+          <!-- News Container -->
+          <div id="newsContainer" class="scrollable-content">
+            <!-- News will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- News Detail Modal -->
+      <div class="modal fade" id="newsDetailModal" tabindex="-1" aria-labelledby="newsDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="newsDetailModalLabel">News Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="newsDetailContent">
+              <!-- News detail content will be populated here -->
+            </div>
+            <div class="modal-footer d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center flex-grow-1">
+                <div id="sourceInfoFooter" class="text-muted small">
+                  <!-- Source information will be populated here -->
+                </div>
+              </div>
+              <div>
+                <a id="readFullArticle" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Read Full Article</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Converter Section -->
+    <div id="converterSection" class="content-section" style="display: none;">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">Date Converter</h2>
+        <p class="text-muted">Convert between Nepali (BS) and English (AD) dates</p>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h5>Nepali Date (BS)</h5>
+                  <div class="mb-3">
+                    <label class="form-label">Year</label>
+                    <input type="number" class="form-control" id="bsYear" value="2082" min="2000" max="2100">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Month</label>
+                    <select class="form-select" id="bsMonth">
+                      <option value="1">बैशाख</option>
+                      <option value="2">जेठ</option>
+                      <option value="3">आषाढ</option>
+                      <option value="4">श्रावण</option>
+                      <option value="5">भदौ</option>
+                      <option value="6">असोज</option>
+                      <option value="7">कार्तिक</option>
+                      <option value="8">मंसिर</option>
+                      <option value="9">पुष</option>
+                      <option value="10">माघ</option>
+                      <option value="11">फाल्गुन</option>
+                      <option value="12">चैत्र</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Day</label>
+                    <input type="number" class="form-control" id="bsDay" value="1" min="1" max="32">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <h5>English Date (AD)</h5>
+                  <div class="mb-3">
+                    <label class="form-label">Year</label>
+                    <input type="number" class="form-control" id="adYear" value="2025" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Month</label>
+                    <input type="number" class="form-control" id="adMonth" value="4" readonly>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Day</label>
+                    <input type="number" class="form-control" id="adDay" value="14" readonly>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center">
+                <button class="btn btn-primary" id="convertBtn">Convert</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exchange Rate Section -->
+    <div id="exchangeSection" class="content-section" style="display: none;">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">विनिमय दर</h2>
+        <p class="text-muted">नेपाल राष्ट्र बैंकबाट प्रत्यक्ष दरहरू</p>
+      </div>
+      
+      <!-- Loading Indicator -->
+      <div id="exchangeLoading" class="text-center py-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading exchange rates...</p>
+      </div>
+      
+      <div class="row justify-content-center">
+        <!-- Exchange Rates -->
+        <div class="col-lg-10 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">विदेशी मुद्रा विनिमय दर</h5>
+              <button id="refreshExchange" class="btn btn-outline-primary btn-sm">
+                <span id="exchangeRefreshIcon">↻</span> ताजा गर्नुहोस्
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>मुद्रा</th>
+                      <th>इकाई</th>
+                      <th class="text-end">किन्ने दर (रु.)</th>
+                      <th class="text-end">बेच्ने दर (रु.)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="exchangeRatesTable">
+                    <!-- Exchange rates will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="mt-3">
+                <small class="text-muted" id="exchangeLastUpdated">
+                  विनिमय दर लोड गर्दै...
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Horoscope Section -->
+    <div id="horoscopeSection" class="content-section" style="display: none;">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">राशीफल</h2>
+        <p class="text-muted">आजको राशीफल - Daily Horoscope</p>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">मेष</h5>
+              <p class="card-text">आज तपाईंको लागि राम्रो दिन हुनेछ। व्यापारमा फाइदा हुन सक्छ।</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">वृषभ</h5>
+              <p class="card-text">स्वास्थ्यमा ध्यान दिनुपर्ने दिन। परिवारसँग समय बिताउनुहोस्।</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">मिथुन</h5>
+              <p class="card-text">नयाँ अवसरहरू आउन सक्छन्। निर्णय लिनुअघि राम्ररी सोच्नुहोस्।</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">कर्कट</h5>
+              <p class="card-text">आर्थिक स्थितिमा सुधार हुनेछ। मित्रहरूसँग राम्रो समय बित्नेछ।</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">सिंह</h5>
+              <p class="card-text">काममा सफलता मिल्नेछ। तर अहंकार नगर्नुहोस्।</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5 class="card-title">कन्या</h5>
+              <p class="card-text">शिक्षाको क्षेत्रमा प्रगति हुनेछ। धैर्य राख्नुहोस्।</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- All Holidays Modal -->
+  <div class="modal fade" id="allHolidaysModal" tabindex="-1" aria-labelledby="allHolidaysModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="allHolidaysModalLabel">All Holidays & Events 2082 B.S.</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="allHolidaysContent">
+          <!-- All holidays content will be populated here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const bs2082 = [
+      {idx:1, nep:'बैशाख', eng:'Baisakh', days:31, start:1, adStart: {month: 4, day: 14}}, // April 14, 2025
+      {idx:2, nep:'जेठ', eng:'Jestha', days:31, start:4, adStart: {month: 5, day: 15}}, // May 15, 2025
+      {idx:3, nep:'आषाढ', eng:'Ashadh', days:32, start:0, adStart: {month: 6, day: 15}}, // June 15, 2025
+      {idx:4, nep:'श्रावण', eng:'Shrawan', days:31, start:4, adStart: {month: 7, day: 17}}, // July 17, 2025
+      {idx:5, nep:'भदौ', eng:'Bhadra', days:31, start:0, adStart: {month: 8, day: 17}}, // August 17, 2025
+      {idx:6, nep:'असोज', eng:'Asoj', days:31, start:3, adStart: {month: 9, day: 17}}, // September 17, 2025
+      {idx:7, nep:'कार्तिक', eng:'Kartik', days:30, start:6, adStart: {month: 10, day: 18}}, // October 18, 2025
+      {idx:8, nep:'मंसिर', eng:'Mangsir', days:29, start:1, adStart: {month: 11, day: 17}}, // November 17, 2025
+      {idx:9, nep:'पुष', eng:'Poush', days:30, start:2, adStart: {month: 12, day: 16}}, // December 16, 2025
+      {idx:10, nep:'माघ', eng:'Magh', days:29, start:4, adStart: {month: 1, day: 15}}, // January 15, 2026
+      {idx:11, nep:'फाल्गुन', eng:'Falgun', days:30, start:5, adStart: {month: 2, day: 13}}, // February 13, 2026
+      {idx:12, nep:'चैत्र', eng:'Chaitra', days:30, start:0, adStart: {month: 3, day: 15}} // March 15, 2026
+    ];
+
+    // Holiday data storage - comprehensive Nepali holidays for 2082 B.S.
+    let holidays = {
+      '1-1': [
+        {name: 'नववर्षारम्भ', type: 'National', desc: 'Nepali New Year 2082 - Official start of the new year'},
+        {name: 'नव वर्ष २०८२', type: 'National', desc: 'New Year 2082 celebration'}
+      ],
+      '1-18': [{name: 'श्रमिक दिवस', type: 'National', desc: 'Labor Day - International Workers Day'}],
+      '1-29': [
+        {name: 'बुद्ध जयन्ती', type: 'Religious', desc: 'Buddha Jayanti - Birth, enlightenment and death of Lord Buddha'},
+        {name: 'उभौली पर्व', type: 'Cultural', desc: 'Ubhauli Festival - Kirat community celebration'}
+      ],
+      '2-15': [{name: 'राष्ट्रिय गणतन्त्र दिवस', type: 'National', desc: 'Republic Day - Commemorating Nepal becoming a republic'}],
+      '2-18': [{name: 'भोटो जात्रा (काठमाडौं उपत्यका मात्र)', type: 'Cultural', desc: 'Bhoto Jatra - Traditional festival in Kathmandu Valley only'}],
+      '2-24': [{name: 'ईद अल-अधा (मुस्लिम धर्मावलम्बी मात्र)', type: 'Religious', desc: 'Eid al-Adha - Festival of Sacrifice for Muslim community only'}],
+      '4-24': [{name: 'रक्षाबन्धन', type: 'Religious', desc: 'Raksha Bandhan - Sacred thread tying ceremony'}],
+      '4-31': [{name: 'श्रीकृष्ण जन्माष्टमी व्रत (मोहरात्री)', type: 'Religious', desc: 'Krishna Janmashtami - Birth celebration of Lord Krishna'}],
+      '5-10': [{name: 'हरितालिका (तीज) व्रत (महिला मात्र)', type: 'Religious', desc: 'Haritalika Teej - Fasting festival for women only'}],
+      '5-15': [{name: 'गौरापर्व (सम्बन्धित क्षेत्रमा)', type: 'Cultural', desc: 'Gaura Parva - Regional festival in related areas'}],
+      '5-21': [{name: 'इन्द्रजात्रा (स्वाँछ्या)', type: 'Cultural', desc: 'Indra Jatra - Kumari-Bhairav-Ganesh chariot festival'}],
+      '5-30': [{name: 'जीवतपुतृका ब्रत (जितियापर्व)', type: 'Religious', desc: 'Jivitputrika Vrata - Jitiya festival for children\'s wellbeing'}],
+      '6-3': [{name: 'संविधान दिवस', type: 'National', desc: 'Constitution Day - Promulgation of Nepal\'s constitution'}],
+      '6-6': [{name: 'घटस्थापना (न:ला स्वने)', type: 'Religious', desc: 'Ghatasthapana - Beginning of Dashain festival'}],
+      '6-13': [{name: 'फूलपाती', type: 'Religious', desc: 'Phulpati - Seventh day of Dashain with sacred flowers'}],
+      '6-14': [{name: 'महाष्टमी व्रत', type: 'Religious', desc: 'Maha Ashtami - Eighth day of Dashain'}],
+      '6-15': [
+        {name: 'महाष्टमी व्रत', type: 'Religious', desc: 'Maha Ashtami - Eighth day of Dashain'},
+        {name: 'महानवमी', type: 'Religious', desc: 'Maha Navami - Ninth day of Dashain'}
+      ],
+      '6-16': [{name: 'विजया दशमी (दशैको टिका)', type: 'National', desc: 'Vijaya Dashami - Main day of Dashain with tika ceremony'}],
+      '6-17': [{name: 'अन्नपूर्णयात्रा/असंचालं', type: 'Cultural', desc: 'Annapurna Yatra - Cultural procession'}],
+      '7-3': [{name: 'दीपावली (लक्ष्मी पूजा)', type: 'Religious', desc: 'Deepawali - Festival of lights and Lakshmi worship'}],
+      '7-4': [{name: 'दर्शश्राद्ध', type: 'Religious', desc: 'Darsha Shraddha - Ancestral worship ritual'}],
+      '7-5': [{name: 'गाई तिहार', type: 'Religious', desc: 'Gai Tihar - Cow worship day of Tihar'}],
+      '7-6': [{name: 'भाइटीका (किजा पूजा)', type: 'Religious', desc: 'Bhai Tika - Brothers blessing day of Tihar'}],
+      '7-7': [{name: 'विश्व विकास सूचना दिवस', type: 'Cultural', desc: 'World Development Information Day'}],
+      '7-10': [{name: 'छठपर्व', type: 'Religious', desc: 'Chhath Parva - Sun worship festival'}],
+      '7-19': [{name: 'गुरु नानक जयन्ती (शिख धर्मावलम्बी)', type: 'Religious', desc: 'Guru Nanak Jayanti - For Sikh community'}],
+      '7-25': [{name: 'फाल्गुनानन्द जयन्ती (किराँत धर्मावलम्बी मात्र)', type: 'Religious', desc: 'Phalgunanda Jayanti - For Kirat community only'}],
+      '8-17': [{name: 'विश्व अपाङ्ग दिवस (विशेष क्षमताभएकाहरु मात्र)', type: 'Cultural', desc: 'International Day of Persons with Disabilities'}],
+      '8-18': [{name: 'उँधौली पर्व', type: 'Cultural', desc: 'Udhauli Festival - Kirat community celebration'}],
+      '9-10': [{name: 'क्रिसमस (इसाई धर्म मात्र)', type: 'Religious', desc: 'Christmas - For Christian community only'}],
+      '9-15': [{name: 'तमु (गुरुङ) ल्होसार', type: 'Cultural', desc: 'Tamu (Gurung) Lhosar - Gurung New Year'}],
+      '9-27': [{name: 'पृथ्वी जयन्ती', type: 'National', desc: 'Prithvi Jayanti - Birth anniversary of King Prithvi Narayan Shah'}],
+      '10-1': [{name: 'माघे संक्रान्ति (घ्यौ:चाकु:सँन्हु)', type: 'Religious', desc: 'Maghe Sankranti - Winter solstice with ghee, molasses and sesame'}],
+      '10-5': [{name: 'सोनाम (तामाङ) ल्होसार', type: 'Cultural', desc: 'Sonam (Tamang) Lhosar - Tamang New Year'}],
+      '10-9': [{name: 'सरस्वती जयन्ती', type: 'Religious', desc: 'Saraswati Jayanti - Goddess of knowledge worship'}],
+      '10-16': [{name: 'शहीद दिवस', type: 'National', desc: 'Martyrs Day - Honoring those who died for the country'}],
+      '11-3': [{name: 'महाशिवरात्रि व्रत', type: 'Religious', desc: 'Maha Shivaratri - Great night of Lord Shiva'}],
+      '11-6': [{name: 'ग्याल्पो ल्होसार', type: 'Cultural', desc: 'Gyalpo Lhosar - Sherpa New Year'}],
+      '11-7': [{name: 'राष्ट्रिय प्रजातन्त्र दिवस', type: 'National', desc: 'National Democracy Day - Restoration of democracy'}],
+      '11-18': [{name: 'पहाडमा होली', type: 'Religious', desc: 'Holi in Hills - Festival of colors in hilly regions'}],
+      '11-19': [{name: 'तराईमा होली', type: 'Religious', desc: 'Holi in Terai - Festival of colors in Terai region'}],
+      '11-24': [{name: 'अन्तर्राष्ट्रिय नारी दिवस', type: 'Cultural', desc: 'International Women\'s Day'}],
+      '12-4': [{name: 'घोडेजात्रा (काठमाडौं मात्र)', type: 'Cultural', desc: 'Ghode Jatra - Horse racing festival in Kathmandu only'}],
+      '12-13': [{name: 'रामनवमी ब्रत (रामजयन्ती)', type: 'Religious', desc: 'Ram Navami - Birth celebration of Lord Rama'}]
+    };
+
+
+
+    function getHolidays(month, day) {
+      const key = `${month}-${day}`;
+      return holidays[key] || [];
+    }
+
+    const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const weekdayHeader = document.getElementById('weekdayHeader');
+    weekdays.forEach(d=>{
+      const th = document.createElement('th');
+      th.innerText = d;
+      if(d==='Sat'){ th.classList.add('text-danger'); }
+      weekdayHeader.appendChild(th);
+    });
+
+    // Auto-initialize to current date
+    const todayBS = getCurrentBSDate();
+    let currentMonth = todayBS.month - 1; // Start with current month
+    let dateFormat = 'BS'; // Default to BS format
+
+    function nepaliNumber(n){
+      const map = ['०','१','२','३','४','५','६','७','८','९'];
+      return String(n).split('').map(ch=>map[ch]||ch).join('');
+    }
+
+    function getCurrentBSDate() {
+      // Fixed reference point: October 10, 2025 = असोज २४, २०८२
+      const referenceAD = new Date(2025, 9, 10); // October 10, 2025 (month is 0-indexed)
+      const referenceBSYear = 2082;
+      const referenceBSMonth = 6; // Asoj
+      const referenceBSDay = 24;
+      
+      // Get current real date
+      const now = new Date();
+      
+      // Calculate days difference from reference
+      const daysDiff = Math.floor((now - referenceAD) / (1000 * 60 * 60 * 24));
+      
+      // Start from reference BS date
+      let bsYear = referenceBSYear;
+      let bsMonth = referenceBSMonth;
+      let bsDay = referenceBSDay + daysDiff;
+      
+      // Days in each month for BS 2082
+      const monthDays = [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30];
+      
+      // Handle forward progression (positive days)
+      while (bsDay > monthDays[bsMonth - 1]) {
+        bsDay -= monthDays[bsMonth - 1];
+        bsMonth++;
+        if (bsMonth > 12) {
+          bsMonth = 1;
+          bsYear++;
+          // Update monthDays for new year if needed
+        }
+      }
+      
+      // Handle backward progression (negative days)
+      while (bsDay <= 0) {
+        bsMonth--;
+        if (bsMonth <= 0) {
+          bsMonth = 12;
+          bsYear--;
+        }
+        bsDay += monthDays[bsMonth - 1];
+      }
+      
+      return {
+        year: bsYear,
+        month: bsMonth,
+        day: bsDay
+      };
+    }
+
+    function getADDate(monthIndex, bsDay) {
+      const month = bs2082[monthIndex];
+      const adStart = month.adStart;
+      let adYear = monthIndex >= 9 ? 2026 : 2025; // Magh, Falgun, Chaitra are in 2026
+      
+      // Calculate AD date
+      let adMonth = adStart.month;
+      let adDay = adStart.day + bsDay - 1;
+      
+      // Handle month overflow
+      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      if (adYear === 2026 && adMonth === 2) daysInMonth[1] = 28; // 2026 is not leap year
+      
+      while (adDay > daysInMonth[adMonth - 1]) {
+        adDay -= daysInMonth[adMonth - 1];
+        adMonth++;
+        if (adMonth > 12) {
+          adMonth = 1;
+          adYear++;
+        }
+      }
+      
+      return { day: adDay, month: adMonth, year: adYear };
+    }
+
+    function showHolidayPopup(month, day, event) {
+      const dayHolidays = getHolidays(month, day);
+      if (dayHolidays.length === 0) return;
+
+      const popup = document.getElementById('holidayPopup');
+      const overlay = document.getElementById('popupOverlay');
+      const title = document.getElementById('holidayTitle');
+      const content = document.getElementById('holidayContent');
+
+      title.textContent = `${nepaliNumber(day)} ${bs2082[month-1].nep} - Holidays & Events`;
+      
+      let html = '';
+      dayHolidays.forEach(holiday => {
+        let typeClass = 'religious-type';
+        if (holiday.type === 'National') {
+          typeClass = 'national-type';
+        } else if (holiday.type === 'Cultural') {
+          typeClass = 'cultural-type';
+        }
+        
+        html += `
+          <div class="holiday-item">
+            <div class="holiday-type ${typeClass}">${holiday.type}</div>
+            <div class="fw-bold mb-1">${holiday.name}</div>
+            <div class="text-muted small">${holiday.desc}</div>
+
+          </div>
+        `;
+      });
+      
+      content.innerHTML = html;
+
+      // Position popup near click
+      const rect = event.target.getBoundingClientRect();
+      popup.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+      popup.style.top = Math.min(rect.top + 20, window.innerHeight - 200) + 'px';
+
+      overlay.style.display = 'block';
+      popup.style.display = 'block';
+    }
+
+    function closeHolidayPopup() {
+      document.getElementById('holidayPopup').style.display = 'none';
+      document.getElementById('popupOverlay').style.display = 'none';
+    }
+
+    function updateMonthDisplay(index) {
+      const month = bs2082[index];
+      const monthDisplay = document.getElementById('currentMonthDisplay');
+      
+      if (dateFormat === 'BS') {
+        monthDisplay.textContent = `${month.nep} २०८२`;
+      } else {
+        // For AD format, show the corresponding AD month and year
+        const adDate = getADDate(index, 15); // Use middle of month for reference
+        const adMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                             'July', 'August', 'September', 'October', 'November', 'December'];
+        monthDisplay.textContent = `${adMonthNames[adDate.month - 1]} ${adDate.year}`;
+      }
+      
+      // Update holiday panel
+      updateHolidayPanel(index);
+    }
+
+    function updateHolidayPanel(monthIndex) {
+      const panel = document.getElementById('monthlyHolidays');
+      const month = bs2082[monthIndex];
+      let html = '';
+      
+      // Get all holidays for this month
+      const monthHolidays = [];
+      for (let day = 1; day <= month.days; day++) {
+        const dayHolidays = getHolidays(monthIndex + 1, day);
+        if (dayHolidays.length > 0) {
+          dayHolidays.forEach(holiday => {
+            monthHolidays.push({
+              day: day,
+              ...holiday
+            });
+          });
+        }
+      }
+      
+      if (monthHolidays.length === 0) {
+        html = '<div class="text-center text-muted py-4">No holidays this month</div>';
+      } else {
+        monthHolidays.forEach(holiday => {
+          const typeClass = holiday.type.toLowerCase();
+          html += `
+            <div class="panel-holiday-item ${typeClass}">
+              <div class="holiday-date">${nepaliNumber(holiday.day)} ${month.nep}</div>
+              <div class="holiday-name">${holiday.name}</div>
+              <div class="holiday-desc">${holiday.desc}</div>
+            </div>
+          `;
+        });
+      }
+      
+      panel.innerHTML = html;
+    }
+
+    function showAllHolidays() {
+      const modalContent = document.getElementById('allHolidaysContent');
+      let html = '<div class="year-holidays">';
+      
+      bs2082.forEach((month, monthIndex) => {
+        const monthHolidays = [];
+        
+        // Get all holidays for this month
+        for (let day = 1; day <= month.days; day++) {
+          const dayHolidays = getHolidays(monthIndex + 1, day);
+          if (dayHolidays.length > 0) {
+            dayHolidays.forEach(holiday => {
+              monthHolidays.push({
+                day: day,
+                ...holiday
+              });
+            });
+          }
+        }
+        
+        if (monthHolidays.length > 0) {
+          html += `
+            <div class="month-section">
+              <div class="month-title">${month.nep} (${month.eng}) २०८२</div>
+          `;
+          
+          monthHolidays.forEach(holiday => {
+            const typeClass = holiday.type.toLowerCase();
+            html += `
+              <div class="panel-holiday-item ${typeClass}">
+                <div class="holiday-date">${nepaliNumber(holiday.day)} ${month.nep}</div>
+                <div class="holiday-name">${holiday.name}</div>
+                <div class="holiday-desc">${holiday.desc}</div>
+              </div>
+            `;
+          });
+          
+          html += '</div>';
+        }
+      });
+      
+      html += '</div>';
+      modalContent.innerHTML = html;
+      
+      // Show the modal
+      const modal = new bootstrap.Modal(document.getElementById('allHolidaysModal'));
+      modal.show();
+    }
+
+    function renderMonth(index){
+      const month = bs2082[index];
+      document.getElementById('monthSelect').value = index;
+      updateMonthDisplay(index);
+      const tbody = document.getElementById('calendarBody');
+      tbody.innerHTML = '';
+      const startDay = month.start;
+
+      let row = document.createElement('tr');
+      for(let i=0;i<startDay;i++){
+        const td=document.createElement('td');
+        td.innerHTML='';
+        row.appendChild(td);
+      }
+
+      for(let d=1;d<=month.days;d++){
+        if(row.children.length===7){
+          tbody.appendChild(row);
+          row=document.createElement('tr');
+        }
+        const td=document.createElement('td');
+        td.className='day-cell align-top p-2';
+        td.setAttribute('data-day', d);
+        td.setAttribute('data-month', index + 1);
+        
+        // Get corresponding AD date
+        const adDate = getADDate(index, d);
+        const adDateStr = `${adDate.month}/${adDate.day}`;
+        
+        // Display dates based on selected format
+        if (dateFormat === 'BS') {
+          td.innerHTML=`<div class="fw-bold fs-5">${nepaliNumber(d)}</div><small class="text-muted">${adDateStr}</small>`;
+        } else {
+          td.innerHTML=`<div class="fw-bold fs-5">${adDate.day}</div><small class="text-muted">${nepaliNumber(d)}</small>`;
+        }
+        
+        // Check for holidays and events
+        const dayHolidays = getHolidays(index + 1, d);
+        if (dayHolidays.length > 0) {
+          td.classList.add('holiday-cell');
+          const dot = document.createElement('div');
+          dot.className = 'holiday-dot';
+          td.appendChild(dot);
+          
+          // Add event list to show events directly in calendar
+          const eventList = document.createElement('div');
+          eventList.className = 'event-list';
+          
+          dayHolidays.forEach(holiday => {
+            const eventItem = document.createElement('div');
+            let eventClass = 'event-item';
+            if (holiday.type === 'National') {
+              eventClass += ' event-national';
+            } else if (holiday.type === 'Cultural') {
+              eventClass += ' event-cultural';
+            } else {
+              eventClass += ' event-religious';
+            }
+            eventItem.className = eventClass;
+            eventItem.textContent = holiday.name;
+            eventItem.title = holiday.desc; // Tooltip on hover
+            eventList.appendChild(eventItem);
+          });
+          
+          td.appendChild(eventList);
+          
+          td.addEventListener('click', (e) => {
+            showHolidayPopup(index + 1, d, e);
+          });
+        }
+        
+        // Check if this is today's date
+        const today = getCurrentBSDate();
+        if(today.month === index + 1 && today.day === d) {
+          td.classList.add('today-highlight');
+        }
+        
+        if(row.children.length===6){ // Saturday column
+          td.classList.add('saturday');
+        }
+        row.appendChild(td);
+      }
+
+      while(row.children.length<7){
+        const td=document.createElement('td');
+        td.innerHTML='';
+        row.appendChild(td);
+      }
+      tbody.appendChild(row);
+    }
+
+    // Event listeners
+    document.getElementById('prevMonth').addEventListener('click',()=>{
+      currentMonth = currentMonth > 0 ? currentMonth - 1 : 11;
+      renderMonth(currentMonth);
+    });
+
+    document.getElementById('nextMonth').addEventListener('click',()=>{
+      currentMonth = currentMonth < 11 ? currentMonth + 1 : 0;
+      renderMonth(currentMonth);
+    });
+
+    document.getElementById('monthSelect').addEventListener('change',(e)=>{
+      currentMonth = parseInt(e.target.value);
+      renderMonth(currentMonth);
+    });
+
+    document.getElementById('todayBtn').addEventListener('click',()=>{
+      const today = getCurrentBSDate();
+      currentMonth = today.month - 1;
+      renderMonth(currentMonth);
+    });
+
+    document.getElementById('closePopup').addEventListener('click', closeHolidayPopup);
+    document.getElementById('popupOverlay').addEventListener('click', closeHolidayPopup);
+    
+    // Holiday panel event listeners
+    document.getElementById('seeAllHolidays').addEventListener('click', showAllHolidays);
+
+    document.getElementById('exportJson').addEventListener('click',()=>{
+      const data = {calendar: bs2082, currentMonth: currentMonth, holidays: holidays};
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'nepali-calendar-2082.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('printBtn').addEventListener('click',()=>{
+      window.print();
+    });
+
+    // Initialize calendar
+    renderMonth(currentMonth);
+
+    // Navigation functionality
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
+      });
+      
+      // Show selected section
+      const targetSection = document.getElementById(sectionName + 'Section');
+      if (targetSection) {
+        targetSection.style.display = 'block';
+      }
+      
+      // Update active nav link
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      
+      const activeLink = document.querySelector(`[data-section="${sectionName}"]`);
+      if (activeLink) {
+        activeLink.classList.add('active');
+      }
+    }
+
+    // Add click event listeners to navigation links
+    document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = e.target.getAttribute('data-section');
+        showSection(section);
+      });
+    });
+
+    // Date converter functionality
+    document.getElementById('convertBtn').addEventListener('click', () => {
+      const bsYear = parseInt(document.getElementById('bsYear').value);
+      const bsMonth = parseInt(document.getElementById('bsMonth').value);
+      const bsDay = parseInt(document.getElementById('bsDay').value);
+      
+      if (bsYear === 2082 && bsMonth >= 1 && bsMonth <= 12) {
+        const monthIndex = bsMonth - 1;
+        const adDate = getADDate(monthIndex, bsDay);
+        
+        document.getElementById('adYear').value = adDate.year;
+        document.getElementById('adMonth').value = adDate.month;
+        document.getElementById('adDay').value = adDate.day;
+      } else {
+        alert('Date conversion is currently available for year 2082 BS only.');
+      }
+    });
+
+    // Auto-convert on input change
+    ['bsYear', 'bsMonth', 'bsDay'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => {
+        document.getElementById('convertBtn').click();
+      });
+    });
+
+    // Date format toggle functionality
+    document.getElementById('bsToggle').addEventListener('click', () => {
+      dateFormat = 'BS';
+      document.getElementById('bsToggle').classList.add('active');
+      document.getElementById('adToggle').classList.remove('active');
+      updateMonthDisplay(currentMonth);
+      renderMonth(currentMonth);
+    });
+
+    document.getElementById('adToggle').addEventListener('click', () => {
+      dateFormat = 'AD';
+      document.getElementById('adToggle').classList.add('active');
+      document.getElementById('bsToggle').classList.remove('active');
+      updateMonthDisplay(currentMonth);
+      renderMonth(currentMonth);
+    });
+
+    // News functionality
+    const newsFeeds = {
+      nepalpostdaily: { url: 'https://nepalpostdaily.com/feed/', name: 'Nepal Post Daily', priority: 1, isPrimary: true },
+      onlinekhabar: { url: 'https://www.onlinekhabar.com/feed', name: 'Online Khabar' },
+      nagarik: { url: 'https://nagariknews.nagariknetwork.com/rss', name: 'Nagarik News' },
+      kantipur: { url: 'https://ekantipur.com/rss', name: 'Kantipur' },
+      setopati: { url: 'https://setopati.com/rss', name: 'Setopati' },
+      ratopati: { url: 'https://ratopati.com/rss', name: 'Ratopati' },
+      rajdhani: { url: 'https://rajdhanidaily.com/feed', name: 'Rajdhani Daily' },
+      newsofnepal: { url: 'https://www.newsofnepal.com/feed', name: 'News of Nepal' },
+      osnepal: { url: 'https://www.osnepal.com/feed', name: 'OSNepal' },
+      abhiyan: { url: 'https://abhiyandaily.com/abhiyanrss', name: 'Arthik Abhiyan' },
+      nepalitimes: { url: 'https://www.nepalitimes.com/feed/', name: 'Nepali Times' },
+      kathmandutribune: { url: 'http://kathmandutribune.com/feed/', name: 'Kathmandu Tribune' },
+      lokaantar: { url: 'http://english.lokaantar.com/feed/', name: 'Lokaantar' },
+      telegraph: { url: 'http://telegraphnepal.com/feed/', name: 'Telegraph Nepal' },
+      himalayan: { url: 'https://thehimalayantimes.com/rss', name: 'The Himalayan Times' }
+    };
+
+    // News portal logos mapping
+    const newsPortalLogos = {
+      'Nepal Post Daily': 'https://nepalpostdaily.com/wp-content/uploads/2023/01/cropped-logo-32x32.png',
+      'Online Khabar': 'https://www.onlinekhabar.com/wp-content/themes/onlinekhabar/assets/images/logo.png',
+      'Nagarik News': 'https://nagariknews.nagariknetwork.com/uploads/source/nagarik-logo.png',
+      'Kantipur': 'https://ekantipur.com/images/logo.png',
+      'Setopati': 'https://setopati.com/images/logo.png',
+      'Ratopati': 'https://ratopati.com/images/logo.png',
+      'Rajdhani Daily': 'https://rajdhanidaily.com/wp-content/uploads/2020/01/logo.png',
+      'News of Nepal': 'https://www.newsofnepal.com/wp-content/uploads/2019/01/logo.png',
+      'OSNepal': 'https://www.osnepal.com/images/logo.png',
+      'Arthik Abhiyan': 'https://abhiyandaily.com/images/logo.png',
+      'Nepali Times': 'https://www.nepalitimes.com/assets/images/logo.png',
+      'Kathmandu Tribune': 'https://kathmandutribune.com/images/logo.png',
+      'Lokaantar': 'https://english.lokaantar.com/images/logo.png',
+      'Telegraph Nepal': 'https://telegraphnepal.com/images/logo.png',
+      'The Himalayan Times': 'https://thehimalayantimes.com/images/logo.png',
+      'समाचार बुलेटिन': 'https://via.placeholder.com/32x32/20c997/ffffff?text=SB'
+    };
+
+    // Function to get news portal logo with fallback
+    function getNewsPortalLogo(sourceName) {
+      const logoUrl = newsPortalLogos[sourceName];
+      if (logoUrl) {
+        return logoUrl;
+      }
+      
+      // Generate fallback logo with source initials
+      const initials = sourceName.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+      const colors = ['1976d2', 'dc3545', '28a745', '6f42c1', 'fd7e14', 'e83e8c', '20c997', '6c757d'];
+      const colorIndex = sourceName.length % colors.length;
+      const color = colors[colorIndex];
+      
+      return `https://via.placeholder.com/32x32/${color}/ffffff?text=${initials}`;
+    }
+
+    let allNewsItems = [];
+    let currentNewsItems = [];
+    let featuredStories = [];
+
+    // Multiple CORS proxies for better reliability
+    const CORS_PROXIES = [
+      'https://api.allorigins.win/get?url=',
+      'https://corsproxy.io/?',
+      'https://api.codetabs.com/v1/proxy?quest='
+    ];
+
+    // Function to find similar stories across different sources
+    function findFeaturedStories(newsItems) {
+      const stories = [];
+      const processed = new Set();
+      
+      // Group news by similarity
+      newsItems.forEach((item, index) => {
+        if (processed.has(index)) return;
+        
+        const similarStories = [item];
+        const itemWords = extractKeywords(item.title + ' ' + item.description);
+        
+        // Find similar stories from other sources
+        newsItems.forEach((otherItem, otherIndex) => {
+          if (otherIndex === index || processed.has(otherIndex)) return;
+          if (otherItem.source === item.source) return; // Skip same source
+          
+          const otherWords = extractKeywords(otherItem.title + ' ' + otherItem.description);
+          const similarity = calculateSimilarity(itemWords, otherWords);
+          
+          // If similarity is high enough, consider it the same story
+          if (similarity > 0.3) {
+            similarStories.push(otherItem);
+            processed.add(otherIndex);
+          }
+        });
+        
+        // If story appears in multiple sources, it's featured
+        if (similarStories.length >= 2) {
+          // Prioritize Nepal Post Daily if it exists in the similar stories
+          const nepalPostStory = similarStories.find(story => story.source === 'Nepal Post Daily');
+          let primaryStory;
+          
+          if (nepalPostStory) {
+            // Use Nepal Post Daily as the primary story
+            primaryStory = nepalPostStory;
+            // Sort others by timestamp, keeping Nepal Post Daily first
+            similarStories.sort((a, b) => {
+              if (a.source === 'Nepal Post Daily') return -1;
+              if (b.source === 'Nepal Post Daily') return 1;
+              return b.timestamp - a.timestamp;
+            });
+          } else {
+            // No Nepal Post Daily, sort by timestamp and take the most recent
+            similarStories.sort((a, b) => b.timestamp - a.timestamp);
+            primaryStory = similarStories[0];
+          }
+          
+          const featuredStory = {
+            ...primaryStory,
+            matchCount: similarStories.length,
+            sources: similarStories.map(s => s.source),
+            allVersions: similarStories
+          };
+          stories.push(featuredStory);
+          processed.add(index);
+        }
+      });
+      
+      // Sort by Nepal Post Daily priority first, then match count, then timestamp
+      return stories
+        .sort((a, b) => {
+          // Prioritize stories from Nepal Post Daily
+          if (a.source === 'Nepal Post Daily' && b.source !== 'Nepal Post Daily') return -1;
+          if (b.source === 'Nepal Post Daily' && a.source !== 'Nepal Post Daily') return 1;
+          
+          // Then by match count (most matched stories first)
+          if (b.matchCount !== a.matchCount) {
+            return b.matchCount - a.matchCount;
+          }
+          
+          // Finally by timestamp
+          return b.timestamp - a.timestamp;
+        })
+        .slice(0, 10); // Top 10 featured stories
+    }
+    
+    // Extract keywords from text for similarity comparison
+    function extractKeywords(text) {
+      const cleanText = text.toLowerCase()
+        .replace(/[^\u0900-\u097F\w\s]/g, ' ') // Keep Devanagari and English words
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      const words = cleanText.split(' ').filter(word => word.length > 2);
+      
+      // Remove common stop words
+      const stopWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'shall', 'this', 'that', 'these', 'those', 'a', 'an', 'as', 'if', 'then', 'than', 'so', 'very', 'just', 'now', 'here', 'there', 'when', 'where', 'why', 'how', 'what', 'who', 'which', 'whose', 'whom', 'र', 'को', 'का', 'की', 'ले', 'लाई', 'मा', 'बाट', 'सँग', 'देखि', 'सम्म', 'भन्दा', 'जस्तै', 'यो', 'त्यो', 'यी', 'ती', 'एक', 'दुई', 'तीन', 'छ', 'छन्', 'थियो', 'थिए', 'हुन्छ', 'भएको', 'गरेको', 'भनेको'];
+      
+      return words.filter(word => !stopWords.includes(word));
+    }
+    
+    // Calculate similarity between two sets of keywords
+    function calculateSimilarity(words1, words2) {
+      if (words1.length === 0 || words2.length === 0) return 0;
+      
+      const set1 = new Set(words1);
+      const set2 = new Set(words2);
+      
+      const intersection = new Set([...set1].filter(x => set2.has(x)));
+      const union = new Set([...set1, ...set2]);
+      
+      return intersection.size / union.size; // Jaccard similarity
+    }
+    
+    // Display featured stories in Google Stories style
+    function displayFeaturedStories(stories) {
+      const container = document.getElementById('featuredStoriesContainer');
+      
+      // Always show 10 cards - use actual stories or create sample ones
+      let displayStories = [];
+      
+      if (stories.length === 0) {
+        // Create sample news bulletin stories when no real stories are available
+        displayStories = [
+          {
+            title: "नेपालमा नयाँ आर्थिक नीति घोषणा",
+            description: "सरकारले नयाँ आर्थिक वर्षका लागि महत्वपूर्ण आर्थिक नीतिहरू घोषणा गरेको छ। यसले देशको आर्थिक विकासमा सकारात्मक प्रभाव पार्ने अपेक्षा गरिएको छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
+            timestamp: Date.now()
+          },
+          {
+            title: "काठमाडौंमा नयाँ यातायात व्यवस्था",
+            description: "राजधानीमा यातायात व्यवस्था सुधार गर्न नयाँ योजना ल्याइएको छ। यसले ट्राफिक जामको समस्या समाधान गर्ने अपेक्षा गरिएको छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 3600000
+          },
+          {
+            title: "शिक्षा क्षेत्रमा डिजिटल सुधार",
+            description: "नेपालका विद्यालयहरूमा डिजिटल शिक्षा प्रणाली विस्तार गर्ने योजना अगाडि बढेको छ। यसले विद्यार्थीहरूलाई आधुनिक शिक्षा प्रदान गर्नेछ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 7200000
+          },
+          {
+            title: "पर्यटन क्षेत्रमा नयाँ अभियान",
+            description: "नेपाल भ्रमण वर्ष २०२५ को तयारी तीव्र पारिएको छ। विदेशी पर्यटकहरूलाई आकर्षित गर्न विभिन्न कार्यक्रमहरू आयोजना गरिने छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 10800000
+          },
+          {
+            title: "स्वास्थ्य सेवामा सुधार",
+            description: "सरकारले स्वास्थ्य सेवाको गुणस्तर बृद्धि गर्न नयाँ नीति ल्याएको छ। ग्रामीण क्षेत्रमा स्वास्थ्य सेवा पहुँच बढाइने छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 14400000
+          },
+          {
+            title: "कृषि क्षेत्रमा आधुनिकीकरण",
+            description: "किसानहरूलाई आधुनिक कृषि प्रविधि प्रदान गर्न सरकारले नयाँ योजना सुरु गरेको छ। यसले खाद्य उत्पादनमा वृद्धि हुने अपेक्षा छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 18000000
+          },
+          {
+            title: "नवीकरणीय ऊर्जा विस्तार",
+            description: "नेपालमा सौर्य र वायु ऊर्जाको विकास तीव्र गतिमा अगाडि बढिरहेको छ। यसले ऊर्जा संकट समाधानमा योगदान पुर्याउनेछ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 21600000
+          },
+          {
+            title: "सूचना प्रविधि विकास",
+            description: "डिजिटल नेपाल निर्माणका लागि सूचना प्रविधि क्षेत्रमा लगानी बढाइएको छ। यसले रोजगारीका नयाँ अवसरहरू सिर्जना गर्नेछ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 25200000
+          },
+          {
+            title: "खेलकुद विकास कार्यक्रम",
+            description: "युवाहरूमा खेलकुदको विकास गर्न सरकारले नयाँ कार्यक्रम सुरु गरेको छ। यसले अन्तर्राष्ट्रिय स्तरमा नेपालको पहिचान बढाउनेछ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 28800000
+          },
+          {
+            title: "सांस्कृतिक सम्पदा संरक्षण",
+            description: "नेपालको सांस्कृतिक सम्पदा संरक्षणका लागि नयाँ नीति निर्माण गरिएको छ। यसले हाम्रो पुरातन संस्कृतिलाई जोगाउन मद्दत गर्नेछ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 32400000
+          }
+        ];
+      } else {
+        // Use actual stories and pad with sample ones if needed
+        displayStories = [...stories];
+        
+        // Add sample stories to reach 10 total
+        const sampleStories = [
+          {
+            title: "नेपालमा नयाँ आर्थिक नीति घोषणा",
+            description: "सरकारले नयाँ आर्थिक वर्षका लागि महत्वपूर्ण आर्थिक नीतिहरू घोषणा गरेको छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
+            timestamp: Date.now()
+          },
+          {
+            title: "काठमाडौंमा नयाँ यातायात व्यवस्था",
+            description: "राजधानीमा यातायात व्यवस्था सुधार गर्न नयाँ योजना ल्याइएको छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 3600000
+          },
+          {
+            title: "शिक्षा क्षेत्रमा डिजिटल सुधार",
+            description: "नेपालका विद्यालयहरूमा डिजिटल शिक्षा प्रणाली विस्तार गर्ने योजना अगाडि बढेको छ।",
+            source: "समाचार बुलेटिन",
+            pubDate: new Date().toISOString(),
+            imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop",
+            timestamp: Date.now() - 7200000
+          }
+        ];
+        
+        while (displayStories.length < 10) {
+          const randomSample = sampleStories[Math.floor(Math.random() * sampleStories.length)];
+          displayStories.push({
+            ...randomSample,
+            timestamp: Date.now() - (displayStories.length * 3600000)
+          });
+        }
+      }
+      
+      // Take only first 10 stories
+      displayStories = displayStories.slice(0, 10);
+      
+      container.className = 'stories-scroll-container';
+      let html = '';
+      
+      displayStories.forEach((story, index) => {
+        const publishDate = story.pubDate ? new Date(story.pubDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'Recent';
+        
+        const summary = story.description.length > 80 ? 
+          story.description.substring(0, 80) + '...' : story.description;
+        
+        // Create image element or placeholder - Google Stories style
+        let imageElement = '';
+        if (story.imageUrl && story.imageUrl.startsWith('http')) {
+          imageElement = `
+            <img src="${story.imageUrl}" alt="News Image" class="google-story-image" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="google-story-placeholder" style="display: none;">NEWS</div>
+          `;
+        } else {
+          imageElement = `<div class="google-story-placeholder">NEWS</div>`;
+        }
+
+        html += `
+          <div class="google-story-card" onclick="showFeaturedStoryDetail(${index})" style="cursor: pointer;">
+            <div class="google-story-image-container">
+              ${imageElement}
+              <div class="google-story-overlay">
+                <span class="google-story-source">${story.source}</span>
+              </div>
+            </div>
+            <div class="google-story-content">
+              <div class="google-story-title">${story.title}</div>
+              <div class="google-story-summary">${summary}</div>
+              <div class="google-story-meta">
+                <span class="google-story-date">${publishDate}</span>
+                ${story.matchCount ? `<span class="google-story-badge">${story.matchCount}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // Show featured story detail with enhanced layout
+    function showFeaturedStoryDetail(index) {
+      // Handle both featured stories and display stories
+      let story;
+      if (featuredStories.length > 0 && featuredStories[index]) {
+        story = featuredStories[index];
+      } else {
+        // Get from display stories array (used when showing sample stories)
+        const container = document.getElementById('featuredStoriesContainer');
+        const storyCards = container.querySelectorAll('.google-story-card');
+        if (storyCards[index]) {
+          const titleElement = storyCards[index].querySelector('.google-story-title');
+          const summaryElement = storyCards[index].querySelector('.google-story-summary');
+          const sourceElement = storyCards[index].querySelector('.google-story-source');
+          const dateElement = storyCards[index].querySelector('.google-story-date');
+          
+          story = {
+            title: titleElement ? titleElement.textContent : 'News Story',
+            description: summaryElement ? summaryElement.textContent : 'No description available',
+            source: sourceElement ? sourceElement.textContent : 'News Source',
+            pubDate: new Date().toISOString(),
+            link: '#',
+            imageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=400&fit=crop',
+            allVersions: [{
+              title: titleElement ? titleElement.textContent : 'News Story',
+              description: summaryElement ? summaryElement.textContent : 'No description available',
+              source: sourceElement ? sourceElement.textContent : 'News Source',
+              pubDate: new Date().toISOString(),
+              link: '#'
+            }],
+            matchCount: 1
+          };
+        }
+      }
+      
+      if (!story) return;
+      
+      const modal = new bootstrap.Modal(document.getElementById('newsDetailModal'));
+      const modalTitle = document.getElementById('newsDetailModalLabel');
+      const modalContent = document.getElementById('newsDetailContent');
+      const readFullLink = document.getElementById('readFullArticle');
+      
+      // Clear modal title as we'll show it in content
+      modalTitle.textContent = 'News Story';
+      readFullLink.href = story.link || '#';
+      
+      const publishDate = story.pubDate ? new Date(story.pubDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'Unknown date';
+      
+      // Get source logo and info
+      function getSourceInfo(sourceName) {
+        const sourceMap = {
+          'Nepal Post Daily': { logo: 'https://via.placeholder.com/40x40/1976d2/ffffff?text=NPD', color: '#1976d2' },
+          'Online Khabar': { logo: 'https://via.placeholder.com/40x40/dc3545/ffffff?text=OK', color: '#dc3545' },
+          'Nagarik News': { logo: 'https://via.placeholder.com/40x40/28a745/ffffff?text=NN', color: '#28a745' },
+          'Kantipur': { logo: 'https://via.placeholder.com/40x40/6f42c1/ffffff?text=KP', color: '#6f42c1' },
+          'Setopati': { logo: 'https://via.placeholder.com/40x40/fd7e14/ffffff?text=SP', color: '#fd7e14' },
+          'Ratopati': { logo: 'https://via.placeholder.com/40x40/e83e8c/ffffff?text=RP', color: '#e83e8c' },
+          'समाचार बुलेटिन': { logo: 'https://via.placeholder.com/40x40/20c997/ffffff?text=SB', color: '#20c997' },
+          'default': { logo: 'https://via.placeholder.com/40x40/6c757d/ffffff?text=N', color: '#6c757d' }
+        };
+        
+        return sourceMap[sourceName] || sourceMap['default'];
+      }
+      
+      const mainSourceInfo = getSourceInfo(story.source);
+      
+      // Create main story image
+      let storyImageHtml = '';
+      if (story.imageUrl && story.imageUrl.startsWith('http')) {
+        storyImageHtml = `
+          <div class="story-image-container mb-4">
+            <img src="${story.imageUrl}" alt="Story Image" class="img-fluid rounded shadow-sm" 
+                 style="width: 100%; height: 300px; object-fit: cover;"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="story-image-placeholder bg-light d-flex align-items-center justify-content-center rounded" 
+                 style="display: none; height: 300px; color: #6c757d;">
+              <i class="fas fa-image fa-3x"></i>
+            </div>
+          </div>
+        `;
+      } else {
+        storyImageHtml = `
+          <div class="story-image-container mb-4">
+            <div class="story-image-placeholder bg-light d-flex align-items-center justify-content-center rounded" 
+                 style="height: 300px; color: #6c757d;">
+              <i class="fas fa-newspaper fa-3x"></i>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Create sources sidebar
+      let sourcesHtml = '';
+      if (story.allVersions && story.allVersions.length > 1) {
+        story.allVersions.forEach((version, idx) => {
+          const versionDate = version.pubDate ? new Date(version.pubDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : 'Recent';
+          
+          const sourceInfo = getSourceInfo(version.source);
+          
+          sourcesHtml += `
+            <div class="source-version-item d-flex align-items-start mb-3 p-2 rounded ${idx === 0 ? 'bg-light border' : 'border'}">
+              <img src="${sourceInfo.logo}" alt="${version.source}" class="rounded-circle me-2 flex-shrink-0" 
+                   style="width: 32px; height: 32px; object-fit: cover;"
+                   onerror="this.style.background='${sourceInfo.color}'; this.style.color='white'; this.innerHTML='${version.source.charAt(0)}'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='14px'; this.style.fontWeight='bold';">
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="text-primary small">${version.source}</strong>
+                  <small class="text-muted">${versionDate}</small>
+                </div>
+                <div class="small text-muted mb-2" style="line-height: 1.3;">
+                  ${version.description.length > 100 ? version.description.substring(0, 100) + '...' : version.description}
+                </div>
+                <a href="${version.link}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                  Read More →
+                </a>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        sourcesHtml = `
+          <div class="source-version-item d-flex align-items-start mb-3 p-2 rounded bg-light border">
+            <img src="${mainSourceInfo.logo}" alt="${story.source}" class="rounded-circle me-2 flex-shrink-0" 
+                 style="width: 32px; height: 32px; object-fit: cover;"
+                 onerror="this.style.background='${mainSourceInfo.color}'; this.style.color='white'; this.innerHTML='${story.source.charAt(0)}'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='14px'; this.style.fontWeight='bold';">
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="text-primary small">${story.source}</strong>
+                <small class="text-muted">${publishDate}</small>
+              </div>
+              <div class="small text-muted mb-2">
+                Original source for this story
+              </div>
+              <a href="${story.link || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                Read Full Article →
+              </a>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Clean description and remove "appeared first on" text
+      let cleanDescription = story.description;
+      
+      // Remove "appeared first on [source]" or similar patterns
+      const appearedPatterns = [
+        /The post .* appeared first on .*/i,
+        /.*appeared first on .*/i,
+        /.*first appeared on .*/i,
+        /Source: .*/i,
+        /Originally published on .*/i,
+        /Read more at .*/i
+      ];
+      
+      appearedPatterns.forEach(pattern => {
+        cleanDescription = cleanDescription.replace(pattern, '').trim();
+      });
+
+      modalContent.innerHTML = `
+        <!-- Headline -->
+        <h3 class="fw-bold mb-3" style="line-height: 1.3; color: #333;">
+          ${story.title}
+        </h3>
+        
+        <!-- Story Image -->
+        ${storyImageHtml}
+        
+        <!-- News Content -->
+        <div class="story-content mb-4" style="font-size: 16px; line-height: 1.6; color: #444;">
+          ${cleanDescription}
+        </div>
+      `;
+      
+      // Set source info in footer - show multiple sources if available
+      const sourceInfoFooter = document.getElementById('sourceInfoFooter');
+      let sourceHtml = '';
+      
+      if (story.allVersions && story.allVersions.length > 1) {
+        // Multiple sources available
+        const sourceNames = story.allVersions.map(version => version.source);
+        const uniqueSources = [...new Set(sourceNames)];
+        
+        if (uniqueSources.length > 1) {
+          sourceHtml = `Sources: ${uniqueSources.join(', ')}`;
+        } else {
+          sourceHtml = `Source: ${story.source}`;
+        }
+      } else {
+        // Single source
+        sourceHtml = `Source: ${story.source}`;
+      }
+      
+      sourceInfoFooter.innerHTML = sourceHtml;
+      
+      modal.show();
+    }
+    
+    // Make function globally available
+    window.showFeaturedStoryDetail = showFeaturedStoryDetail;
+
+    // Function to automatically categorize news based on content
+    function categorizeNews(newsItem) {
+      const text = (newsItem.title + ' ' + newsItem.description).toLowerCase();
+      
+      // Category keywords for automatic classification
+      const categoryKeywords = {
+        popular: ['लोकप्रिय', 'popular', 'trending', 'viral', 'चर्चामा', 'व्यापक', 'ट्रेन्डिङ', 'चर्चित', 'महत्वपूर्ण'],
+        country: ['नेपाल', 'nepal', 'देश', 'country', 'राष्ट्रिय', 'national', 'सरकार', 'government', 'संसद', 'प्रधानमन्त्री', 'विधेयक', 'नीति', 'policy', 'राज्य', 'state'],
+        literature: ['साहित्य', 'literature', 'कविता', 'poetry', 'उपन्यास', 'novel', 'लेखक', 'writer', 'पुस्तक', 'book', 'गोष्ठी', 'पुरस्कार', 'award', 'कथा', 'story'],
+        health: ['स्वास्थ्य', 'health', 'अस्पताल', 'hospital', 'डाक्टर', 'doctor', 'औषधि', 'medicine', 'खोप', 'vaccine', 'उपचार', 'treatment', 'बिरामी', 'patient', 'रोग', 'disease'],
+        technology: ['प्रविधि', 'technology', 'टेक्नोलोजी', 'tech', 'कम्प्युटर', 'computer', 'इन्टरनेट', 'internet', '५जी', '5g', 'डिजिटल', 'digital', 'नेटवर्क', 'network', 'मोबाइल', 'mobile'],
+        economy: ['अर्थ', 'economy', 'आर्थिक', 'economic', 'बैंक', 'bank', 'व्यापार', 'business', 'बजार', 'market', 'शेयर', 'share', 'नेप्से', 'nepse', 'लगानी', 'investment', 'रुपैयाँ', 'rupee'],
+        world: ['विश्व', 'world', 'अन्तर्राष्ट्रिय', 'international', 'विदेश', 'foreign', 'global', 'संयुक्त राष्ट्र', 'भारत', 'india', 'चीन', 'china', 'सम्झौता', 'agreement'],
+        entertainment: ['मनोरञ्जन', 'entertainment', 'फिल्म', 'film', 'सिनेमा', 'cinema', 'कलाकार', 'artist', 'संगीत', 'music', 'धारावाहिक', 'serial', 'पुरस्कार', 'award', 'नाच', 'dance'],
+        sports: ['खेलकुद', 'sports', 'फुटबल', 'football', 'क्रिकेट', 'cricket', 'खेल', 'game', 'एसिया कप', 'asia cup', 'प्रतियोगिता', 'competition', 'खेलाडी', 'player', 'जित', 'win']
+      };
+      
+      // Check each category for keyword matches
+      for (const [category, keywords] of Object.entries(categoryKeywords)) {
+        const matchCount = keywords.filter(keyword => text.includes(keyword)).length;
+        if (matchCount > 0) {
+          return category;
+        }
+      }
+      
+      // Default category if no matches found
+      return 'country';
+    }
+
+    async function fetchRSSFeed(feedUrl, sourceName) {
+      let lastError = null;
+      
+      // Try multiple CORS proxies
+      for (let i = 0; i < CORS_PROXIES.length; i++) {
+        try {
+          const proxy = CORS_PROXIES[i];
+          let fetchUrl;
+          
+          if (proxy.includes('allorigins.win')) {
+            fetchUrl = proxy + encodeURIComponent(feedUrl);
+          } else {
+            fetchUrl = proxy + encodeURIComponent(feedUrl);
+          }
+          
+          console.log(`Trying to fetch from ${sourceName} using proxy ${i + 1}...`);
+          
+          const response = await fetch(fetchUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/rss+xml, application/xml, text/xml'
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          let xmlText;
+          if (proxy.includes('allorigins.win')) {
+            const jsonResponse = await response.json();
+            xmlText = jsonResponse.contents;
+          } else {
+            xmlText = await response.text();
+          }
+          
+          if (!xmlText || xmlText.trim() === '') {
+            throw new Error('Empty response received');
+          }
+          
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+          
+          // Check for parsing errors
+          const parserError = xmlDoc.querySelector('parsererror');
+          if (parserError) {
+            throw new Error('XML parsing error: ' + parserError.textContent);
+          }
+          
+          const items = xmlDoc.querySelectorAll('item');
+          
+          if (items.length === 0) {
+            // Try alternative selectors for different RSS formats
+            const entries = xmlDoc.querySelectorAll('entry'); // Atom format
+            if (entries.length === 0) {
+              throw new Error('No news items found in feed');
+            }
+            
+            // Handle Atom format
+            const newsItems = [];
+            entries.forEach((entry, index) => {
+              if (index < 10) {
+                const title = entry.querySelector('title')?.textContent || 'No title';
+                const summary = entry.querySelector('summary')?.textContent || 
+                               entry.querySelector('content')?.textContent || '';
+                const link = entry.querySelector('link')?.getAttribute('href') || '';
+                const published = entry.querySelector('published')?.textContent || 
+                                entry.querySelector('updated')?.textContent || '';
+                
+                // Extract image from Atom feed - enhanced extraction
+                let imageUrl = '';
+                
+                // Try to find image in media:thumbnail or media:content
+                const mediaContent = entry.querySelector('media\\:content[medium="image"]') || 
+                                   entry.querySelector('media\\:thumbnail') ||
+                                   entry.querySelector('media\\:content') ||
+                                   entry.querySelector('content[type="image"]');
+                if (mediaContent) {
+                  imageUrl = mediaContent.getAttribute('url') || mediaContent.getAttribute('src');
+                }
+                
+                // Try to extract image from summary/content HTML - enhanced patterns
+                if (!imageUrl && summary) {
+                  const imgPatterns = [
+                    /<img[^>]+src=["']([^"']+)["'][^>]*>/i,
+                    /<img[^>]+src=([^\s>]+)[^>]*>/i,
+                    /src=["']([^"']+\.(?:jpg|jpeg|png|gif|webp|bmp))[^"']*/i,
+                    /https?:\/\/[^\s<>"']+\.(?:jpg|jpeg|png|gif|webp|bmp)/i
+                  ];
+                  
+                  for (const pattern of imgPatterns) {
+                    const match = summary.match(pattern);
+                    if (match && match[1]) {
+                      imageUrl = match[1];
+                      break;
+                    }
+                  }
+                }
+                
+                // Try content field if summary didn't have image
+                if (!imageUrl) {
+                  const content = entry.querySelector('content')?.textContent || '';
+                  if (content) {
+                    const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+                    if (imgMatch) {
+                      imageUrl = imgMatch[1];
+                    }
+                  }
+                }
+                
+                // Clean up image URL for Atom feeds
+                if (imageUrl) {
+                  imageUrl = imageUrl.trim();
+                  if (!imageUrl.startsWith('http')) {
+                    if (imageUrl.startsWith('//')) {
+                      imageUrl = 'https:' + imageUrl;
+                    } else if (imageUrl.startsWith('/')) {
+                      try {
+                        const feedDomain = new URL(feedUrl).origin;
+                        imageUrl = feedDomain + imageUrl;
+                      } catch (e) {
+                        imageUrl = '';
+                      }
+                    } else {
+                      imageUrl = '';
+                    }
+                  }
+                }
+                
+                const cleanSummary = summary.replace(/<[^>]*>/g, '').trim();
+                
+                newsItems.push({
+                  title: title.trim(),
+                  description: cleanSummary,
+                  link: link.trim(),
+                  pubDate: published,
+                  source: sourceName,
+                  timestamp: new Date(published).getTime() || Date.now(),
+                  imageUrl: imageUrl || ''
+                });
+              }
+            });
+            
+            console.log(`Successfully fetched ${newsItems.length} items from ${sourceName}`);
+            return newsItems;
+          }
+          
+          // Handle RSS format
+          const newsItems = [];
+          items.forEach((item, index) => {
+            if (index < 10) {
+              const title = item.querySelector('title')?.textContent || 'No title';
+              const description = item.querySelector('description')?.textContent || 
+                                item.querySelector('content\\:encoded')?.textContent || '';
+              const link = item.querySelector('link')?.textContent || '';
+              const pubDate = item.querySelector('pubDate')?.textContent || 
+                            item.querySelector('dc\\:date')?.textContent || '';
+              
+              // Extract image from description or enclosure
+              let imageUrl = '';
+              
+              // Try to find image in enclosure tag
+              const enclosure = item.querySelector('enclosure[type^="image"]');
+              if (enclosure) {
+                imageUrl = enclosure.getAttribute('url');
+              }
+              
+              // Try to find image in media:content or media:thumbnail
+              if (!imageUrl) {
+                const mediaContent = item.querySelector('media\\:content[medium="image"]') || 
+                                   item.querySelector('media\\:thumbnail') ||
+                                   item.querySelector('media\\:content') ||
+                                   item.querySelector('content[type="image"]');
+                if (mediaContent) {
+                  imageUrl = mediaContent.getAttribute('url') || mediaContent.getAttribute('src');
+                }
+              }
+              
+              // Try to extract image from description HTML - enhanced extraction
+              if (!imageUrl && description) {
+                // Look for various image patterns in HTML
+                const imgPatterns = [
+                  /<img[^>]+src=["']([^"']+)["'][^>]*>/i,
+                  /<img[^>]+src=([^\s>]+)[^>]*>/i,
+                  /src=["']([^"']+\.(?:jpg|jpeg|png|gif|webp|bmp))[^"']*/i,
+                  /https?:\/\/[^\s<>"']+\.(?:jpg|jpeg|png|gif|webp|bmp)/i
+                ];
+                
+                for (const pattern of imgPatterns) {
+                  const match = description.match(pattern);
+                  if (match && match[1]) {
+                    imageUrl = match[1];
+                    break;
+                  }
+                }
+              }
+              
+              // Try to find image in CDATA sections
+              if (!imageUrl) {
+                const cdataMatch = description.match(/<!\[CDATA\[(.*?)\]\]>/s);
+                if (cdataMatch) {
+                  const cdataContent = cdataMatch[1];
+                  const imgMatch = cdataContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+                  if (imgMatch) {
+                    imageUrl = imgMatch[1];
+                  }
+                }
+              }
+              
+              // Clean up image URL
+              if (imageUrl) {
+                imageUrl = imageUrl.trim();
+                // Ensure it's a valid HTTP/HTTPS URL
+                if (!imageUrl.startsWith('http')) {
+                  if (imageUrl.startsWith('//')) {
+                    imageUrl = 'https:' + imageUrl;
+                  } else if (imageUrl.startsWith('/')) {
+                    // Try to construct full URL from feed domain
+                    try {
+                      const feedDomain = new URL(feedUrl).origin;
+                      imageUrl = feedDomain + imageUrl;
+                    } catch (e) {
+                      imageUrl = '';
+                    }
+                  } else {
+                    imageUrl = '';
+                  }
+                }
+              }
+              
+              // Clean up description (remove HTML tags and decode entities)
+              const cleanDescription = description
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .trim();
+              
+              newsItems.push({
+                title: title.trim(),
+                description: cleanDescription,
+                link: link.trim(),
+                pubDate: pubDate,
+                source: sourceName,
+                timestamp: new Date(pubDate).getTime() || Date.now(),
+                imageUrl: imageUrl || ''
+              });
+            }
+          });
+          
+          console.log(`Successfully fetched ${newsItems.length} items from ${sourceName}`);
+          return newsItems;
+          
+        } catch (error) {
+          console.error(`Error with proxy ${i + 1} for ${sourceName}:`, error);
+          lastError = error;
+          continue;
+        }
+      }
+      
+      // If all proxies failed, try direct fetch as last resort
+      try {
+        console.log(`Trying direct fetch for ${sourceName}...`);
+        const response = await fetch(feedUrl, {
+          mode: 'no-cors',
+          headers: {
+            'Accept': 'application/rss+xml, application/xml, text/xml'
+          }
+        });
+        
+        // Note: no-cors mode won't give us the actual content, but we try anyway
+        console.log(`Direct fetch attempted for ${sourceName}, but no-cors mode limits access`);
+      } catch (directError) {
+        console.error(`Direct fetch also failed for ${sourceName}:`, directError);
+      }
+      
+      console.error(`All methods failed for ${sourceName}. Last error:`, lastError);
+      return [];
+    }
+
+
+
+    async function loadNews(selectedSource = 'all') {
+      const newsContainer = document.getElementById('newsContainer');
+      const loadingIndicator = document.getElementById('newsLoading');
+      const refreshIcon = document.getElementById('refreshIcon');
+      
+      // Show loading
+      loadingIndicator.style.display = 'block';
+      newsContainer.innerHTML = '';
+      refreshIcon.style.animation = 'spin 1s linear infinite';
+      
+      console.log('Fetching real RSS feeds...');
+      
+      try {
+        let fetchedNews = [];
+        
+        if (selectedSource === 'all') {
+          // Fetch from multiple sources
+          const feedEntries = Object.entries(newsFeeds);
+          const promises = feedEntries.map(([key, feed]) => 
+            fetchRSSFeed(feed.url, feed.name).catch(error => {
+              console.error(`Failed to fetch ${feed.name}:`, error);
+              return [];
+            })
+          );
+          
+          console.log(`Attempting to fetch from ${feedEntries.length} RSS sources...`);
+          const results = await Promise.allSettled(promises);
+          
+          let successCount = 0;
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value.length > 0) {
+              fetchedNews.push(...result.value);
+              successCount++;
+              console.log(`✓ Successfully loaded ${result.value.length} items from ${feedEntries[index][1].name}`);
+            } else {
+              console.log(`✗ Failed to load from ${feedEntries[index][1].name}`);
+            }
+          });
+          
+          console.log(`Successfully fetched from ${successCount}/${feedEntries.length} sources`);
+          
+        } else {
+          // Fetch from single source
+          const feed = newsFeeds[selectedSource];
+          if (feed) {
+            console.log(`Fetching from ${feed.name}...`);
+            fetchedNews = await fetchRSSFeed(feed.url, feed.name);
+            console.log(`Fetched ${fetchedNews.length} items from ${feed.name}`);
+          }
+        }
+        
+        if (fetchedNews.length > 0) {
+          // Categorize news items automatically
+          fetchedNews = fetchedNews.map(item => ({
+            ...item,
+            category: categorizeNews(item)
+          }));
+          
+          // Sort by Nepal Post Daily priority first, then timestamp (newest first)
+          fetchedNews.sort((a, b) => {
+            // Prioritize Nepal Post Daily stories
+            if (a.source === 'Nepal Post Daily' && b.source !== 'Nepal Post Daily') return -1;
+            if (b.source === 'Nepal Post Daily' && a.source !== 'Nepal Post Daily') return 1;
+            
+            // Then by timestamp (newest first)
+            return b.timestamp - a.timestamp;
+          });
+          
+          allNewsItems = fetchedNews;
+          currentNewsItems = allNewsItems;
+          
+          // Find and display featured stories
+          featuredStories = findFeaturedStories(allNewsItems);
+          displayFeaturedStories(featuredStories);
+          
+          displayNews(currentNewsItems);
+          
+          // Show success message
+          const successDiv = document.createElement('div');
+          successDiv.className = 'alert alert-success mb-3';
+          successDiv.innerHTML = `
+            <strong>Live News Loaded:</strong> Successfully fetched ${fetchedNews.length} real news items from RSS feeds.
+            <br><small>Found ${featuredStories.length} featured stories matching across multiple sources.</small>
+            <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+          `;
+          newsContainer.insertBefore(successDiv, newsContainer.firstChild);
+          
+          setTimeout(() => {
+            if (successDiv.parentElement) successDiv.remove();
+          }, 5000);
+          
+        } else {
+          // No news fetched - show error with fallback
+          console.log('No news items fetched from any source, showing fallback message');
+          
+          newsContainer.innerHTML = `
+            <div class="alert alert-warning mb-3">
+              <h5><strong>Unable to Load Live News</strong></h5>
+              <p>We couldn't fetch live news from RSS feeds due to CORS restrictions or network issues.</p>
+              <p><strong>Possible solutions:</strong></p>
+              <ul>
+                <li>Try refreshing the page</li>
+                <li>Check your internet connection</li>
+                <li>Some news sources may be temporarily unavailable</li>
+              </ul>
+              <button class="btn btn-primary btn-sm" onclick="loadNews('${selectedSource}')">
+                Try Again
+              </button>
+            </div>
+            <div class="text-center py-5">
+              <h4 class="text-muted">No News Available</h4>
+              <p class="text-muted">Please try refreshing or check back later.</p>
+            </div>
+          `;
+          
+          allNewsItems = [];
+          currentNewsItems = [];
+          featuredStories = [];
+          
+          // Clear featured stories section
+          document.getElementById('featuredStoriesContainer').innerHTML = `
+            <div class="col-12 p-4 text-center text-muted">
+              <p>Featured stories will appear here when news is successfully loaded from multiple sources.</p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('Error loading news:', error);
+        
+        newsContainer.innerHTML = `
+          <div class="alert alert-danger mb-3">
+            <h5><strong>Error Loading News</strong></h5>
+            <p>An error occurred while fetching news: ${error.message}</p>
+            <button class="btn btn-primary btn-sm" onclick="loadNews('${selectedSource}')">
+              Try Again
+            </button>
+          </div>
+        `;
+        
+        allNewsItems = [];
+        currentNewsItems = [];
+      }
+      
+      // Hide loading
+      loadingIndicator.style.display = 'none';
+      refreshIcon.style.animation = '';
+    }
+
+    function displayNews(newsItems) {
+      const newsContainer = document.getElementById('newsContainer');
+      
+      if (newsItems.length === 0) {
+        const categoryName = currentCategory === 'all' ? 'this source' : 
+          document.querySelector(`[data-category="${currentCategory}"]`).textContent;
+        newsContainer.innerHTML = `
+          <div class="no-news">
+            <h5>No news available</h5>
+            <p>No news items found for "${categoryName}". Please try a different category or refresh the news.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '';
+      newsItems.forEach((item, index) => {
+        const publishDate = item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'Unknown date';
+        
+        const summary = item.description.length > 200 ? 
+          item.description.substring(0, 200) + '...' : item.description;
+        
+        html += `
+          <div class="news-item" onclick="showNewsDetail(${index})">
+            <div class="news-content">
+              <div class="news-title">${item.title}</div>
+              <div class="news-summary">${summary}</div>
+              <div class="news-meta">
+                <div>
+                  <span class="news-source">${item.source}</span>
+                  <span class="news-date ms-2">${publishDate}</span>
+                </div>
+                <button class="see-more-btn" onclick="event.stopPropagation(); showNewsDetail(${index})">
+                  See More →
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      newsContainer.innerHTML = html;
+    }
+
+    function showNewsDetail(index) {
+      const item = currentNewsItems[index];
+      if (!item) return;
+      
+      const modal = new bootstrap.Modal(document.getElementById('newsDetailModal'));
+      const modalTitle = document.getElementById('newsDetailModalLabel');
+      const modalContent = document.getElementById('newsDetailContent');
+      const readFullLink = document.getElementById('readFullArticle');
+      const sourceInfoFooter = document.getElementById('sourceInfoFooter');
+      
+      modalTitle.textContent = item.title;
+      readFullLink.href = item.link;
+      
+      const publishDate = item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'Unknown date';
+      
+      // Create image element for modal
+      let modalImageElement = '';
+      if (item.imageUrl && item.imageUrl.startsWith('http')) {
+        modalImageElement = `
+          <div class="mb-3">
+            <img src="${item.imageUrl}" alt="News Image" class="img-fluid rounded" 
+                 style="max-height: 300px; width: 100%; object-fit: cover;"
+                 onerror="this.style.display='none';">
+          </div>
+        `;
+      }
+
+      // Clean description and remove "appeared first on" text
+      let cleanDescription = item.description;
+      
+      // Remove "appeared first on [source]" or similar patterns
+      const appearedPatterns = [
+        /The post .* appeared first on .*/i,
+        /.*appeared first on .*/i,
+        /.*first appeared on .*/i,
+        /Source: .*/i,
+        /Originally published on .*/i,
+        /Read more at .*/i
+      ];
+      
+      appearedPatterns.forEach(pattern => {
+        cleanDescription = cleanDescription.replace(pattern, '').trim();
+      });
+
+      modalContent.innerHTML = `
+        <div class="news-detail-content">
+          <h4 class="fw-bold mb-3" style="line-height: 1.3; color: #333;">
+            ${item.title}
+          </h4>
+          ${modalImageElement}
+          <div class="mb-4" style="font-size: 16px; line-height: 1.6; color: #444;">
+            ${cleanDescription}
+          </div>
+        </div>
+      `;
+      
+      // Set source info in footer - show multiple sources if available
+      let sourceHtml = '';
+      
+      if (item.allVersions && item.allVersions.length > 1) {
+        // Multiple sources available
+        const sourceNames = item.allVersions.map(version => version.source);
+        const uniqueSources = [...new Set(sourceNames)];
+        
+        if (uniqueSources.length > 1) {
+          sourceHtml = `Sources: ${uniqueSources.join(', ')}`;
+        } else {
+          sourceHtml = `Source: ${item.source}`;
+        }
+      } else {
+        // Single source
+        sourceHtml = `Source: ${item.source}`;
+      }
+      
+      sourceInfoFooter.innerHTML = sourceHtml;
+      
+      modal.show();
+    }
+
+    // Make showNewsDetail globally available
+    window.showNewsDetail = showNewsDetail;
+
+    // Enhanced category filtering functionality
+    let currentCategory = 'all';
+    
+    function filterNewsByCategory(category) {
+      currentCategory = category;
+      
+      if (category === 'all') {
+        // Show all news sorted by category priority
+        currentNewsItems = [...allNewsItems].sort((a, b) => {
+          const categoryOrder = ['popular', 'country', 'technology', 'economy', 'health', 'world', 'sports', 'entertainment', 'literature'];
+          const categoryA = categoryOrder.indexOf(a.category);
+          const categoryB = categoryOrder.indexOf(b.category);
+          
+          if (categoryA !== categoryB) {
+            return categoryA - categoryB;
+          }
+          return b.timestamp - a.timestamp;
+        });
+      } else {
+        // Filter by exact category match first
+        let categoryFiltered = allNewsItems.filter(item => item.category === category);
+        
+        // If no exact matches, use enhanced keyword filtering
+        if (categoryFiltered.length === 0) {
+          const categoryKeywords = {
+            popular: ['लोकप्रिय', 'popular', 'trending', 'viral', 'चर्चामा', 'व्यापक', 'ट्रेन्डिङ', 'चर्चित'],
+            country: ['नेपाल', 'nepal', 'देश', 'country', 'राष्ट्रिय', 'national', 'सरकार', 'government', 'संसद', 'प्रधानमन्त्री', 'विधेयक'],
+            literature: ['साहित्य', 'literature', 'कविता', 'poetry', 'उपन्यास', 'novel', 'लेखक', 'writer', 'पुस्तक', 'गोष्ठी', 'पुरस्कार'],
+            health: ['स्वास्थ्य', 'health', 'अस्पताल', 'hospital', 'डाक्टर', 'doctor', 'औषधि', 'medicine', 'खोप', 'उपचार', 'बिरामी'],
+            technology: ['प्रविधि', 'technology', 'टेक्नोलोजी', 'tech', 'कम्प्युटर', 'computer', 'इन्टरनेट', 'internet', '५जी', 'डिजिटल', 'नेटवर्क'],
+            economy: ['अर्थ', 'economy', 'आर्थिक', 'economic', 'बैंक', 'bank', 'व्यापार', 'business', 'बजार', 'market', 'शेयर', 'नेप्से', 'लगानी'],
+            world: ['विश्व', 'world', 'अन्तर्राष्ट्रिय', 'international', 'विदेश', 'foreign', 'global', 'संयुक्त राष्ट्र', 'भारत', 'सम्झौता'],
+            entertainment: ['मनोरञ्जन', 'entertainment', 'फिल्म', 'film', 'सिनेमा', 'cinema', 'कलाकार', 'artist', 'संगीत', 'धारावाहिक', 'पुरस्कार'],
+            sports: ['खेलकुद', 'sports', 'फुटबल', 'football', 'क्रिकेट', 'cricket', 'खेल', 'game', 'एसिया कप', 'प्रतियोगिता', 'खेलाडी']
+          };
+          
+          const keywords = categoryKeywords[category] || [];
+          categoryFiltered = allNewsItems.filter(item => {
+            const searchText = (item.title + ' ' + item.description).toLowerCase();
+            return keywords.some(keyword => searchText.includes(keyword.toLowerCase()));
+          });
+        }
+        
+        // Sort filtered results by timestamp (newest first)
+        currentNewsItems = categoryFiltered.sort((a, b) => b.timestamp - a.timestamp);
+      }
+      
+      displayNews(currentNewsItems);
+      
+      // Update category button states with smooth animation
+      document.querySelectorAll('.news-category-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      const activeBtn = document.querySelector(`[data-category="${category}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        // Smooth scroll to active button if needed
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      
+      // Show category info
+      const categoryNames = {
+        all: 'सबै समाचार',
+        popular: 'लोकप्रिय समाचार',
+        country: 'देश समाचार',
+        literature: 'साहित्य समाचार',
+        health: 'स्वास्थ्य समाचार',
+        technology: 'प्रविधि समाचार',
+        economy: 'आर्थिक समाचार',
+        world: 'विश्व समाचार',
+        entertainment: 'मनोरञ्जन समाचार',
+        sports: 'खेलकुद समाचार'
+      };
+      
+      console.log(`Showing ${currentNewsItems.length} items for ${categoryNames[category] || category}`);
+    }
+
+    // News event listeners
+    document.getElementById('refreshNews').addEventListener('click', () => {
+      const selectedSource = document.getElementById('newsSourceSelect').value;
+      loadNews(selectedSource);
+    });
+
+    document.getElementById('newsSourceSelect').addEventListener('change', (e) => {
+      loadNews(e.target.value);
+    });
+    
+    // Category button event listeners
+    document.querySelectorAll('.news-category-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const category = e.target.getAttribute('data-category');
+        filterNewsByCategory(category);
+      });
+    });
+
+    // Load news when news section is first accessed
+    let newsLoaded = false;
+    const originalShowSection = showSection;
+    showSection = function(sectionName) {
+      originalShowSection(sectionName);
+      if (sectionName === 'news' && !newsLoaded) {
+        loadNews();
+        newsLoaded = true;
+      }
+    };
+
+    // Add CSS animation for refresh icon
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Live Date & Time Functionality
+    function updateDateTime() {
+      const now = new Date();
+      
+      // Update current date (both BS and AD)
+      const currentBSDate = getCurrentBSDate();
+      const adDate = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      
+      const bsMonthName = bs2082[currentBSDate.month - 1].nep;
+      const bsDate = `${nepaliNumber(currentBSDate.day)} ${bsMonthName} ${nepaliNumber(currentBSDate.year)}`;
+      
+      document.getElementById('currentDate').innerHTML = `
+        <div>${bsDate}</div>
+        <div class="text-muted small">${adDate}</div>
+      `;
+      
+      // Update current time (Nepal Time)
+      const nepalTime = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kathmandu',
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      
+      document.getElementById('currentTime').textContent = nepalTime;
+    }
+
+    // Calculate sunrise and sunset times for Kathmandu, Nepal
+    function calculateSunTimes() {
+      const now = new Date();
+      const latitude = 27.7172; // Kathmandu latitude
+      const longitude = 85.3240; // Kathmandu longitude
+      
+      // Get day of year
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff = now - start;
+      const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      // Solar calculations (simplified)
+      const P = Math.asin(0.39795 * Math.cos(0.98563 * (dayOfYear - 173) * Math.PI / 180));
+      const argument = (Math.sin(0.8333 * Math.PI / 180) + Math.sin(latitude * Math.PI / 180) * Math.sin(P)) / (Math.cos(latitude * Math.PI / 180) * Math.cos(P));
+      
+      let sunrise, sunset;
+      
+      if (Math.abs(argument) < 1) {
+        const A = 180 / Math.PI * Math.acos(argument);
+        const B = 720 - 4 * longitude - A;
+        const C = 720 - 4 * longitude + A;
+        
+        // Convert to Nepal time (UTC+5:45)
+        const utcOffset = 5.75; // 5 hours 45 minutes
+        
+        sunrise = new Date(now);
+        const sunriseMinutes = B + (utcOffset * 60);
+        sunrise.setHours(Math.floor(sunriseMinutes / 60), sunriseMinutes % 60, 0, 0);
+        
+        sunset = new Date(now);
+        const sunsetMinutes = C + (utcOffset * 60);
+        sunset.setHours(Math.floor(sunsetMinutes / 60), sunsetMinutes % 60, 0, 0);
+      } else {
+        // Polar day or night - use approximate times for Kathmandu
+        sunrise = new Date(now);
+        sunrise.setHours(6, 0, 0, 0); // Approximate sunrise
+        
+        sunset = new Date(now);
+        sunset.setHours(18, 0, 0, 0); // Approximate sunset
+      }
+      
+      // Format times
+      const sunriseTime = sunrise.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      
+      const sunsetTime = sunset.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      
+      document.getElementById('sunriseTime').textContent = sunriseTime;
+      document.getElementById('sunsetTime').textContent = sunsetTime;
+    }
+
+    // More accurate sunrise/sunset calculation using SunCalc algorithm
+    function getAccurateSunTimes() {
+      const now = new Date();
+      const lat = 27.7172; // Kathmandu latitude
+      const lng = 85.3240; // Kathmandu longitude
+      
+      // Julian day calculation
+      const a = Math.floor((14 - (now.getMonth() + 1)) / 12);
+      const y = now.getFullYear() - a;
+      const m = (now.getMonth() + 1) + 12 * a - 3;
+      const jd = now.getDate() + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+      
+      // Solar calculations
+      const n = jd - 2451545.0;
+      const L = (280.460 + 0.9856474 * n) % 360;
+      const g = ((357.528 + 0.9856003 * n) % 360) * Math.PI / 180;
+      const lambda = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * Math.PI / 180;
+      
+      const alpha = Math.atan2(Math.cos(23.439 * Math.PI / 180) * Math.sin(lambda), Math.cos(lambda));
+      const delta = Math.asin(Math.sin(23.439 * Math.PI / 180) * Math.sin(lambda));
+      
+      const latRad = lat * Math.PI / 180;
+      const h0 = -0.833 * Math.PI / 180; // Civil twilight
+      
+      const cosH = (Math.sin(h0) - Math.sin(latRad) * Math.sin(delta)) / (Math.cos(latRad) * Math.cos(delta));
+      
+      if (Math.abs(cosH) <= 1) {
+        const H = Math.acos(cosH);
+        const transit = (alpha - lng * Math.PI / 180) / (2 * Math.PI);
+        const sunrise = transit - H / (2 * Math.PI);
+        const sunset = transit + H / (2 * Math.PI);
+        
+        // Convert to local time (Nepal Time UTC+5:45)
+        const sunriseHours = (sunrise * 24 + 5.75) % 24;
+        const sunsetHours = (sunset * 24 + 5.75) % 24;
+        
+        const sunriseTime = new Date(now);
+        sunriseTime.setHours(Math.floor(sunriseHours), Math.floor((sunriseHours % 1) * 60), 0, 0);
+        
+        const sunsetTime = new Date(now);
+        sunsetTime.setHours(Math.floor(sunsetHours), Math.floor((sunsetHours % 1) * 60), 0, 0);
+        
+        document.getElementById('sunriseTime').textContent = sunriseTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        
+        document.getElementById('sunsetTime').textContent = sunsetTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      } else {
+        // Fallback to approximate times
+        document.getElementById('sunriseTime').textContent = '6:00 AM';
+        document.getElementById('sunsetTime').textContent = '6:00 PM';
+      }
+    }
+
+    // Initialize and update every second
+    function initializeLiveDisplay() {
+      updateDateTime();
+      getAccurateSunTimes();
+      
+      // Update time every second
+      setInterval(updateDateTime, 1000);
+      
+      // Update sun times every hour
+      setInterval(getAccurateSunTimes, 3600000);
+    }
+
+    // Exchange Rate Functionality
+    let exchangeRatesData = {};
+    let goldRatesData = {};
+
+    // Currency symbols and names mapping
+    const currencyInfo = {
+      'USD': { name: 'US Dollar', symbol: '$', flag: '🇺🇸' },
+      'EUR': { name: 'Euro', symbol: '€', flag: '🇪🇺' },
+      'GBP': { name: 'British Pound', symbol: '£', flag: '🇬🇧' },
+      'JPY': { name: 'Japanese Yen', symbol: '¥', flag: '🇯🇵' },
+      'CNY': { name: 'Chinese Yuan', symbol: '¥', flag: '🇨🇳' },
+      'INR': { name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳' },
+      'AUD': { name: 'Australian Dollar', symbol: 'A$', flag: '🇦🇺' },
+      'CAD': { name: 'Canadian Dollar', symbol: 'C$', flag: '🇨🇦' },
+      'CHF': { name: 'Swiss Franc', symbol: 'Fr', flag: '🇨🇭' },
+      'SEK': { name: 'Swedish Krona', symbol: 'kr', flag: '🇸🇪' },
+      'DKK': { name: 'Danish Krone', symbol: 'kr', flag: '🇩🇰' },
+      'NOK': { name: 'Norwegian Krone', symbol: 'kr', flag: '🇳🇴' },
+      'MYR': { name: 'Malaysian Ringgit', symbol: 'RM', flag: '🇲🇾' },
+      'THB': { name: 'Thai Baht', symbol: '฿', flag: '🇹🇭' },
+      'KRW': { name: 'South Korean Won', symbol: '₩', flag: '🇰🇷' },
+      'SGD': { name: 'Singapore Dollar', symbol: 'S$', flag: '🇸🇬' },
+      'HKD': { name: 'Hong Kong Dollar', symbol: 'HK$', flag: '🇭🇰' },
+      'SAR': { name: 'Saudi Riyal', symbol: 'SR', flag: '🇸🇦' },
+      'AED': { name: 'UAE Dirham', symbol: 'د.إ', flag: '🇦🇪' },
+      'QAR': { name: 'Qatari Riyal', symbol: 'QR', flag: '🇶🇦' },
+      'KWD': { name: 'Kuwaiti Dinar', symbol: 'KD', flag: '🇰🇼' },
+      'BHD': { name: 'Bahraini Dinar', symbol: 'BD', flag: '🇧🇭' },
+      'NPR': { name: 'Nepali Rupee', symbol: 'Rs', flag: '🇳🇵' }
+    };
+
+    async function fetchExchangeRates() {
+      const loadingIndicator = document.getElementById('exchangeLoading');
+      const refreshIcon = document.getElementById('exchangeRefreshIcon');
+      
+      try {
+        // Show loading
+        loadingIndicator.style.display = 'block';
+        refreshIcon.style.animation = 'spin 1s linear infinite';
+        
+        console.log('🏦 Fetching live exchange rates from Nepal Rastra Bank API v1...');
+        
+        // Get current date in Nepal timezone for accurate API request
+        const now = new Date();
+        const nepalTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kathmandu"}));
+        
+        const formatDate = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        // Try current date first, then previous days if no data
+        const dates = [];
+        for (let i = 0; i < 7; i++) {
+          const testDate = new Date(nepalTime.getTime() - (i * 24 * 60 * 60 * 1000));
+          dates.push(formatDate(testDate));
+        }
+        
+        let data = null;
+        let successfulProxy = null;
+        let usedDate = null;
+        
+        // Working CORS proxies that handle NRB API correctly
+        const corsProxies = [
+          { 
+            name: 'AllOrigins', 
+            url: 'https://api.allorigins.win/get?url=', 
+            type: 'allorigins',
+            headers: { 'Accept': 'application/json' }
+          },
+          { 
+            name: 'CorsAnywhere', 
+            url: 'https://cors-anywhere.herokuapp.com/', 
+            type: 'direct',
+            headers: { 
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          },
+          { 
+            name: 'Proxy6', 
+            url: 'https://api.codetabs.com/v1/proxy?quest=', 
+            type: 'direct',
+            headers: { 'Accept': 'application/json' }
+          }
+        ];
+        
+        // Try each date with each proxy until we get data
+        for (const testDate of dates) {
+          if (data) break;
+          
+          console.log(`📅 Trying date: ${testDate}`);
+          
+          for (const proxy of corsProxies) {
+            try {
+              // Build NRB API URL with proper parameters
+              const nrbApiUrl = `https://www.nrb.org.np/api/forex/v1/rates?page=1&per_page=50&from=${testDate}&to=${testDate}`;
+              
+              let proxyUrl;
+              if (proxy.type === 'allorigins') {
+                proxyUrl = proxy.url + encodeURIComponent(nrbApiUrl);
+              } else {
+                proxyUrl = proxy.url + nrbApiUrl;
+              }
+              
+              console.log(`🔄 Trying ${proxy.name} for ${testDate}...`);
+              
+              const response = await fetch(proxyUrl, {
+                method: 'GET',
+                headers: proxy.headers,
+                mode: 'cors'
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+              
+              let responseData;
+              
+              if (proxy.type === 'allorigins') {
+                const jsonResponse = await response.json();
+                if (!jsonResponse.contents) {
+                  throw new Error('Empty response from AllOrigins');
+                }
+                responseData = JSON.parse(jsonResponse.contents);
+              } else {
+                responseData = await response.json();
+              }
+              
+              // Check if we got valid NRB API response
+              if (responseData && responseData.status && responseData.status.code === 200) {
+                if (responseData.data && responseData.data.payload && responseData.data.payload.length > 0) {
+                  // Check if the payload has rates
+                  const latestData = responseData.data.payload[0];
+                  if (latestData && latestData.rates && latestData.rates.length > 0) {
+                    data = responseData;
+                    successfulProxy = proxy.name;
+                    usedDate = testDate;
+                    console.log(`✅ Success! Got ${latestData.rates.length} rates from ${proxy.name} for ${testDate}`);
+                    break;
+                  }
+                }
+              }
+              
+            } catch (proxyError) {
+              console.log(`❌ ${proxy.name} failed for ${testDate}:`, proxyError.message);
+              continue;
+            }
+          }
+        }
+        
+        if (!data) {
+          throw new Error('Unable to fetch exchange rates from Nepal Rastra Bank API. All proxies and dates failed.');
+        }
+        
+        // Process the successful response
+        const latestRateData = data.data.payload[0];
+        const rates = latestRateData.rates;
+        
+        let processedRates = [];
+        
+        rates.forEach((rate) => {
+          // Handle different possible field names from NRB API
+          const currency = rate.currency?.code || rate.iso3 || rate.currency;
+          const name = rate.currency?.name || rate.name || currency;
+          const unit = parseInt(rate.currency?.unit || rate.unit || 1);
+          const buyRate = parseFloat(rate.buy || 0);
+          const sellRate = parseFloat(rate.sell || 0);
+          
+          if (currency && (buyRate > 0 || sellRate > 0)) {
+            processedRates.push({
+              currency: currency.toUpperCase(),
+              name: name,
+              unit: unit,
+              buy: buyRate,
+              sell: sellRate
+            });
+          }
+        });
+        
+        if (processedRates.length > 0) {
+          // Sort by currency priority
+          const priorityCurrencies = ['USD', 'EUR', 'GBP', 'AUD', 'JPY', 'INR', 'CNY', 'CAD', 'CHF', 'SEK', 'DKK', 'NOK'];
+          processedRates.sort((a, b) => {
+            const aPriority = priorityCurrencies.indexOf(a.currency);
+            const bPriority = priorityCurrencies.indexOf(b.currency);
+            
+            if (aPriority !== -1 && bPriority !== -1) {
+              return aPriority - bPriority;
+            } else if (aPriority !== -1) {
+              return -1;
+            } else if (bPriority !== -1) {
+              return 1;
+            } else {
+              return a.currency.localeCompare(b.currency);
+            }
+          });
+          
+          exchangeRatesData = processedRates;
+          displayExchangeRates(exchangeRatesData);
+          
+          // Update status
+          const rateDate = latestRateData.date || usedDate;
+          const updateTime = new Date(rateDate + 'T00:00:00+05:45'); // Nepal timezone
+          const nepaliTime = updateTime.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'Asia/Kathmandu'
+          });
+          
+          document.getElementById('exchangeLastUpdated').innerHTML = `
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <strong class="text-success">✅ Live from Nepal Rastra Bank</strong><br>
+                <small>Rate Date: ${nepaliTime}</small><br>
+                <small class="text-muted">Via ${successfulProxy}</small>
+              </div>
+              <div class="text-end">
+                <small class="text-muted">Official NRB API v1</small><br>
+                <small class="text-success">${processedRates.length} currencies loaded</small>
+              </div>
+            </div>
+          `;
+          
+          // Show success notification
+          const exchangeTable = document.getElementById('exchangeRatesTable');
+          const successRow = document.createElement('tr');
+          successRow.className = 'table-success';
+          successRow.innerHTML = `
+            <td colspan="4" class="text-center py-3">
+              <div class="d-flex align-items-center justify-content-center">
+                <span class="me-2">🎉</span>
+                <div>
+                  <strong>Nepal Rastra Bank Exchange Rates Loaded Successfully!</strong><br>
+                  <small>${processedRates.length} currencies • ${nepaliTime}</small>
+                </div>
+              </div>
+            </td>
+          `;
+          exchangeTable.insertBefore(successRow, exchangeTable.firstChild);
+          
+          setTimeout(() => {
+            if (successRow.parentElement) {
+              successRow.style.transition = 'opacity 0.5s ease';
+              successRow.style.opacity = '0';
+              setTimeout(() => successRow.remove(), 500);
+            }
+          }, 4000);
+          
+        } else {
+          throw new Error('No valid exchange rate data found in API response');
+        }
+        
+      } catch (error) {
+        console.error('💥 Error fetching NRB exchange rates:', error);
+        
+        // Show error with fallback to sample data
+        const exchangeTable = document.getElementById('exchangeRatesTable');
+        exchangeTable.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center py-4">
+              <div class="alert alert-warning mb-3">
+                <h6 class="alert-heading">⚠️ Unable to Load Live Exchange Rates</h6>
+                <p class="mb-2"><strong>Error:</strong> ${error.message}</p>
+                <p class="mb-3 small">The Nepal Rastra Bank API may be temporarily unavailable or blocked by CORS policy.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                  <button class="btn btn-sm btn-primary" onclick="fetchExchangeRates()">
+                    🔄 Try Again
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="showSampleExchangeRates()">
+                    📊 Show Sample Rates
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+        
+        document.getElementById('exchangeLastUpdated').innerHTML = 
+          '<span class="text-warning">⚠️ Unable to fetch live rates from Nepal Rastra Bank</span>';
+      }
+      
+      // Hide loading
+      loadingIndicator.style.display = 'none';
+      refreshIcon.style.animation = '';
+    }
+
+
+
+    function showSampleExchangeRates() {
+      // Sample exchange rates data when API is not available
+      const sampleRates = [
+        { currency: 'USD', unit: 1, buy: 132.50, sell: 133.10 },
+        { currency: 'EUR', unit: 1, buy: 144.20, sell: 144.85 },
+        { currency: 'GBP', unit: 1, buy: 167.30, sell: 168.05 },
+        { currency: 'JPY', unit: 100, buy: 89.45, sell: 89.85 },
+        { currency: 'CNY', unit: 1, buy: 18.25, sell: 18.35 },
+        { currency: 'INR', unit: 100, buy: 158.50, sell: 162.00 },
+        { currency: 'AUD', unit: 1, buy: 85.20, sell: 85.65 },
+        { currency: 'CAD', unit: 1, buy: 97.80, sell: 98.25 },
+        { currency: 'CHF', unit: 1, buy: 148.90, sell: 149.55 },
+        { currency: 'SEK', unit: 100, buy: 12.15, sell: 12.25 }
+      ];
+      
+      displayExchangeRates(sampleRates);
+    }
+
+    function displayExchangeRates(rates) {
+      const tableBody = document.getElementById('exchangeRatesTable');
+      let html = '';
+      
+      if (!rates || rates.length === 0) {
+        html = `
+          <tr>
+            <td colspan="4" class="text-center py-4 text-muted">
+              No exchange rate data available
+            </td>
+          </tr>
+        `;
+      } else {
+        rates.forEach(rate => {
+          const currency = rate.currency || rate.iso3 || rate.code;
+          const currencyData = currencyInfo[currency] || { name: currency, symbol: '', flag: '' };
+          
+          // Handle different possible data structures
+          const unit = rate.unit || rate.units || 1;
+          const buyRate = rate.buy || rate.buying || rate.buyRate || 0;
+          const sellRate = rate.sell || rate.selling || rate.sellRate || 0;
+          
+          if (currency && (buyRate > 0 || sellRate > 0)) {
+            html += `
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">${currencyData.flag}</span>
+                    <div>
+                      <strong>${currency}</strong>
+                      <br><small class="text-muted">${currencyData.name}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>${unit}</td>
+                <td class="text-end">
+                  <strong>Rs ${buyRate.toFixed(2)}</strong>
+                </td>
+                <td class="text-end">
+                  <strong>Rs ${sellRate.toFixed(2)}</strong>
+                </td>
+              </tr>
+            `;
+          }
+        });
+      }
+      
+      tableBody.innerHTML = html;
+    }
+
+
+
+
+
+    // Exchange rate event listeners
+    document.getElementById('refreshExchange').addEventListener('click', fetchExchangeRates);
+
+    // Load exchange rates when exchange section is accessed
+    let exchangeLoaded = false;
+    const originalShowSectionExchange = showSection;
+    showSection = function(sectionName) {
+      originalShowSectionExchange(sectionName);
+      if (sectionName === 'exchange' && !exchangeLoaded) {
+        fetchExchangeRates();
+        exchangeLoaded = true;
+      }
+    };
+
+    // Start the live display when page loads
+    initializeLiveDisplay();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98c4a5e3f2f0edfb',t:'MTc2MDA4Mzg5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98c5c353e0a3edfb',t:'MTc2MDA5NTU4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
